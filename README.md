@@ -234,7 +234,7 @@ systemctl --user stop tunnel
 
 ## 🖥️ GUI Desktop (Tauri + Angular)
 
-Besides the CLI, a cross-platform **Desktop GUI** is available built with **Tauri (Rust)** + **Angular**.
+Besides the CLI, a cross-platform **Desktop GUI** is available built with **Tauri (Rust)** + **Angular 19**.
 
 ### Features
 
@@ -245,7 +245,20 @@ Besides the CLI, a cross-platform **Desktop GUI** is available built with **Taur
 - 🔒 **Secure** — Reads auth token from `~/.tunnel/.auth` automatically via Tauri IPC
 - 🖥️ **System Tray** — Right-click context menu: Open GUI, Reload Config, Disconnect, Quit
 
-### Prerequisites for GUI
+### Download GUI Installer
+
+Download the latest GUI installer from [GitHub Releases](https://github.com/skyber2016/tunnel/releases/latest):
+
+| Format | Platform | Install Command |
+|--------|----------|-----------------|
+| `.deb` | Debian / Ubuntu | `sudo dpkg -i SSH_Tunnel_Manager_*_amd64.deb` |
+| `.AppImage` | Universal Linux | `chmod +x SSH_Tunnel_Manager_*.AppImage && ./SSH_Tunnel_Manager_*.AppImage` |
+| `.rpm` | Fedora / RHEL | `sudo rpm -i SSH_Tunnel_Manager-*.x86_64.rpm` |
+
+> [!NOTE]
+> The GUI requires the **tunnel-daemon** to be running. Install the CLI/daemon first using the [Quick Install](#quick-install) command.
+
+### Prerequisites for GUI (Build from Source)
 
 - [Node.js](https://nodejs.org/) 18+
 - [Rust](https://rustup.rs/) 1.77+
@@ -268,9 +281,9 @@ npm run tauri build
 ```
 
 > Output installers will be in `src/Tunnel.Gui/src-tauri/target/release/bundle/`:
+> - **Linux**: `.deb`, `.AppImage`, `.rpm`
 > - **Windows**: `.msi` and `.exe` (NSIS)
 > - **macOS**: `.dmg` and `.app`
-> - **Linux**: `.deb`, `.AppImage`
 
 ---
 

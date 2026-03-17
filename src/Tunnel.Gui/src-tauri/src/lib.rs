@@ -67,8 +67,9 @@ pub fn run() {
         })
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
-                // Theo yêu cầu người dùng: Nút X (Close) trên Window sẽ thoát hẳn ứng dụng
-                window.app_handle().exit(0);
+                // Ẩn cửa sổ xuống System Tray thay vì thoát hẳn
+                api.prevent_close();
+                window.hide().unwrap();
             }
             _ => {}
         })

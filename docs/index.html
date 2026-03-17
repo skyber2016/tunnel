@@ -345,6 +345,7 @@
   <a href="#" class="nav-logo">🚇 <span>tunnel</span></a>
   <div class="nav-links">
     <a href="#features">Features</a>
+    <a href="#gui">GUI</a>
     <a href="#demo">Demo</a>
     <a href="#commands">Commands</a>
     <a href="#uninstall">Uninstall</a>
@@ -476,6 +477,87 @@
         <div class="feature-icon">🛡️</div>
         <h3>Systemd Hardening</h3>
         <p>Service runs with <code>NoNewPrivileges</code>, <code>PrivateTmp</code>, and <code>ProtectSystem</code> for minimal attack surface.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DESKTOP GUI ── -->
+<section id="gui" style="background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">Desktop App</div>
+    <h2 class="section-title">🖥️ SSH Tunnel Manager — GUI</h2>
+    <p class="section-sub" style="margin-bottom: 2rem;">
+      A cross-platform desktop app built with <strong style="color:var(--cyan)">Tauri</strong> (Rust) + <strong style="color:var(--cyan)">Angular 19</strong>.
+      Manage tunnels visually — no terminal needed.
+    </p>
+
+    <!-- GUI Features chips -->
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2.5rem;">
+      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">📋 Dashboard</span>
+      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">▶️ One-click actions</span>
+      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">➕ Add/Remove ports</span>
+      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">🔒 Secure IPC</span>
+      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">🖥️ System Tray</span>
+    </div>
+
+    <!-- Download buttons -->
+    <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem; font-weight: 600;">⬇ Download for Linux</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+
+      <!-- .deb -->
+      <a href="https://github.com/skyber2016/tunnel/releases/latest" target="_blank" rel="noopener" style="
+        display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem;
+        background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+        text-decoration: none; transition: border-color 0.2s, transform 0.2s;
+      " onmouseover="this.style.borderColor='rgba(0,210,190,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+        <span style="font-size: 2rem;">📦</span>
+        <div>
+          <div style="color: var(--text); font-weight: 600; font-size: 0.95rem;">.deb Package</div>
+          <div style="color: var(--muted); font-size: 0.8rem;">Debian / Ubuntu — <code style="color:var(--cyan2); font-size:0.75rem;">sudo dpkg -i *.deb</code></div>
+        </div>
+      </a>
+
+      <!-- .AppImage -->
+      <a href="https://github.com/skyber2016/tunnel/releases/latest" target="_blank" rel="noopener" style="
+        display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem;
+        background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+        text-decoration: none; transition: border-color 0.2s, transform 0.2s;
+      " onmouseover="this.style.borderColor='rgba(0,210,190,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+        <span style="font-size: 2rem;">🐧</span>
+        <div>
+          <div style="color: var(--text); font-weight: 600; font-size: 0.95rem;">.AppImage</div>
+          <div style="color: var(--muted); font-size: 0.8rem;">Universal Linux — <code style="color:var(--cyan2); font-size:0.75rem;">chmod +x *.AppImage && ./*.AppImage</code></div>
+        </div>
+      </a>
+
+      <!-- .rpm -->
+      <a href="https://github.com/skyber2016/tunnel/releases/latest" target="_blank" rel="noopener" style="
+        display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem;
+        background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+        text-decoration: none; transition: border-color 0.2s, transform 0.2s;
+      " onmouseover="this.style.borderColor='rgba(0,210,190,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+        <span style="font-size: 2rem;">🔴</span>
+        <div>
+          <div style="color: var(--text); font-weight: 600; font-size: 0.95rem;">.rpm Package</div>
+          <div style="color: var(--muted); font-size: 0.8rem;">Fedora / RHEL — <code style="color:var(--cyan2); font-size:0.75rem;">sudo rpm -i *.rpm</code></div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Build from source -->
+    <div class="terminal" style="max-width: 600px;">
+      <div class="terminal-bar">
+        <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
+        <span>Build from source</span>
+      </div>
+      <div class="terminal-body">
+        <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">cd src/Tunnel.Gui</span></div>
+        <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">npm install</span></div>
+        <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">npm run tauri build</span></div>
+        <div class="term-blank"></div>
+        <div class="term-line"><span class="term-green">✔ Bundled:</span><span class="term-grey"> .deb, .rpm, .AppImage → src-tauri/target/release/bundle/</span></div>
       </div>
     </div>
   </div>

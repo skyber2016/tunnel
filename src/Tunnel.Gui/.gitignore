@@ -37,6 +37,12 @@ yarn-error.log
 testem.log
 /typings
 
+# Tauri / Rust
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/WixTools/
+src-tauri/app-icon.png
+
 # System files
 .DS_Store
 Thumbs.db
