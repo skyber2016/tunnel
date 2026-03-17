@@ -14,7 +14,7 @@
     <StripSymbols>true</StripSymbols>
 
     <!-- Target platforms -->
-    <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,5 +27,31 @@
     <!-- Spectre.Console -->
     <PackageReference Include="Spectre.Console" Version="0.49.1" />
   </ItemGroup>
+
+  <!--
+    Post-publish: rename binary → <AssemblyName>-<RID> and generate .md5 sidecar.
+    Only runs when PublishDir is set (i.e. dotnet publish, not dotnet build).
+    Usage: dotnet publish -r linux-x64 -c Release -o ./out
+           → out/tunnel-linux-x64
+           → out/tunnel-linux-x64.md5
+  -->
+  <Target Name="CreateReleaseBundleAfterPublish" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">
+    <PropertyGroup>
+      <!-- RID from dotnet publish -r <rid>; fallback to first in list -->
+      <BundleName>$(AssemblyName)-$(RuntimeIdentifier)</BundleName>
+      <BundleSrc>$(PublishDir)$(AssemblyName)</BundleSrc>
+      <BundleDest>$(PublishDir)$(BundleName)</BundleDest>
+    </PropertyGroup>
+
+    <!-- Copy binary to arch-suffixed name -->
+    <Copy SourceFiles="$(BundleSrc)" DestinationFiles="$(BundleDest)" Condition="Exists('$(BundleSrc)')" />
+
+    <!-- Generate MD5 sidecar via bash md5sum -->
+    <Exec Command="md5sum &quot;$(BundleName)&quot; &gt; &quot;$(BundleName).md5&quot;"
+          WorkingDirectory="$(PublishDir)"
+          Condition="Exists('$(BundleDest)')" />
+
+    <Message Text="[publish] Created $(BundleDest) + $(BundleDest).md5" Importance="high" />
+  </Target>
 
 </Project>

@@ -14,7 +14,7 @@
     <StripSymbols>true</StripSymbols>
 
     <!-- Target platforms -->
-    <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -27,5 +27,25 @@
     <!-- SSH.NET: latest AOT-friendly version -->
     <PackageReference Include="SSH.NET" Version="2024.2.0" />
   </ItemGroup>
+
+  <!--
+    Post-publish: rename binary → <AssemblyName>-<RID> and generate .md5 sidecar.
+    Only runs when PublishDir is set (i.e. dotnet publish, not dotnet build).
+  -->
+  <Target Name="CreateReleaseBundleAfterPublish" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">
+    <PropertyGroup>
+      <BundleName>$(AssemblyName)-$(RuntimeIdentifier)</BundleName>
+      <BundleSrc>$(PublishDir)$(AssemblyName)</BundleSrc>
+      <BundleDest>$(PublishDir)$(BundleName)</BundleDest>
+    </PropertyGroup>
+
+    <Copy SourceFiles="$(BundleSrc)" DestinationFiles="$(BundleDest)" Condition="Exists('$(BundleSrc)')" />
+
+    <Exec Command="md5sum &quot;$(BundleName)&quot; &gt; &quot;$(BundleName).md5&quot;"
+          WorkingDirectory="$(PublishDir)"
+          Condition="Exists('$(BundleDest)')" />
+
+    <Message Text="[publish] Created $(BundleDest) + $(BundleDest).md5" Importance="high" />
+  </Target>
 
 </Project>
