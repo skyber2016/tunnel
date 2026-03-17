@@ -232,6 +232,48 @@ systemctl --user stop tunnel
 
 ---
 
+## 🖥️ GUI Desktop (Tauri + Angular)
+
+Besides the CLI, a cross-platform **Desktop GUI** is available built with **Tauri (Rust)** + **Angular**.
+
+### Features
+
+- 📋 **Dashboard** — View all profiles, connection status, and per-port statuses at a glance
+- ▶️ **One-click actions** — Start/Stop/Reload/Reconnect/Clean profiles
+- ➕ **Add/Remove ports** — Manage port forwardings inline
+- ⚠️ **Error screen** — Friendly notice when daemon isn't running, with auto-retry
+- 🔒 **Secure** — Reads auth token from `~/.tunnel/.auth` automatically via Tauri IPC
+- 🖥️ **System Tray** — Right-click context menu: Open GUI, Reload Config, Disconnect, Quit
+
+### Prerequisites for GUI
+
+- [Node.js](https://nodejs.org/) 18+
+- [Rust](https://rustup.rs/) 1.77+
+- Platform build tools (see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/))
+
+### Run GUI in Dev Mode
+
+```bash
+cd src/Tunnel.Gui
+npm install
+npm run tauri dev
+```
+
+### Build GUI Installer
+
+```bash
+cd src/Tunnel.Gui
+npm install
+npm run tauri build
+```
+
+> Output installers will be in `src/Tunnel.Gui/src-tauri/target/release/bundle/`:
+> - **Windows**: `.msi` and `.exe` (NSIS)
+> - **macOS**: `.dmg` and `.app`
+> - **Linux**: `.deb`, `.AppImage`
+
+---
+
 ## Build from Source
 
 Requires **.NET 9 SDK** on **Linux** (Native AOT cross-compile from Windows is not supported).
@@ -258,10 +300,15 @@ tunnel (CLI)             tunnel-daemon (Background Service)
 System.CommandLine  ──►  Minimal API  localhost:6385
 Spectre.Console          SSH.NET ForwardedPortLocal
 HttpClient               ~/.tunnel/profiles.json
+                                 ▲
+tunnel-gui (Desktop)             │
+Tauri (Rust)  ───────────────────┘
+Angular 19 + TailwindCSS
 ```
 
 - **Daemon**: Runs as a `systemd --user` service, exposes Minimal API on `localhost:6385`
-- **CLI**: Connects to daemon via Basic Auth HTTP, uses Spectre.Console for rich terminal UI
+- **CLI**: Connects to daemon via Bearer token HTTP, uses Spectre.Console for rich terminal UI
+- **GUI**: Tauri desktop app (Rust + Angular), reads token from `~/.tunnel/.auth`, talks to the same daemon API
 - **Config**: Daemon is the single source of truth for `~/.tunnel/profiles.json`
 
 ---

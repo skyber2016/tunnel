@@ -53,3 +53,12 @@ Desktop.ini
 /tmp/
 out
 .agent
+
+# ── GUI (Tauri + Angular) ─────────────────────────────────────
+src/Tunnel.Gui/node_modules/
+src/Tunnel.Gui/dist/
+src/Tunnel.Gui/.angular/
+src/Tunnel.Gui/src-tauri/target/
+src/Tunnel.Gui/src-tauri/gen/
+src/Tunnel.Gui/src-tauri/WixTools/
+src/Tunnel.Gui/tauri_help.txt

@@ -4,14 +4,6 @@ All notable changes to this project are documented in this file.
 
 ---
 
----
-
----
-
----
-
----
-
 ## [1.2.4] — 2026-03-17
 
 ### 🔄 Changed: `tunnel update`
