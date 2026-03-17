@@ -1,0 +1,53 @@
+# ── .NET Build Output ─────────────────────────────────────────
+bin/
+obj/
+
+# Published Native AOT output
+**/publish/
+**/bin/linux-x64/
+**/bin/linux-arm64/
+
+# ── IDE ───────────────────────────────────────────────────────
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# JetBrains Rider
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ── NuGet ─────────────────────────────────────────────────────
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# ── Native AOT / Linker artifacts ─────────────────────────────
+*.ilk
+*.pdb
+*.dbg
+runtimeconfig.json
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+
+# ── Logs & temp ───────────────────────────────────────────────
+*.log
+/tmp/
