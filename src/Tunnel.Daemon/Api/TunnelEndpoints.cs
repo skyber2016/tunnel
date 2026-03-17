@@ -1,4 +1,5 @@
 using Tunnel.Daemon.Services;
+using Tunnel.Shared;
 using Tunnel.Shared.Models;
 
 namespace Tunnel.Daemon.Api;
@@ -14,6 +15,11 @@ public static class TunnelEndpoints
 
         // Health check — no auth required
         app.MapGet("/health", () => "OK");
+
+        // Version — no auth required
+        app.MapGet("/api/version", () =>
+            Results.Ok(ApiResponse<VersionModel>.Ok(
+                new VersionModel { Daemon = AppVersion.Current })));
 
         // ── Tunnel Control ────────────────────────────────────────────
 

@@ -36,6 +36,12 @@ public sealed class ApiClient : IDisposable
         catch { return false; }
     }
 
+    public async Task<ApiResponse<VersionModel>?> GetVersionAsync()
+    {
+        var json = await _http.GetStringAsync("/api/version");
+        return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseVersionModel);
+    }
+
     // ── Status ──────────────────────────────────────────────────────
 
     public async Task<ApiResponse<TunnelStatusModel>?> GetStatusAsync()

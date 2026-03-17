@@ -65,10 +65,10 @@ fi
 
 echo ""
 read -r -p "Proceed with uninstall? [y/N] " confirm
-case "$confirm" in
-  [yY][eE][sS]|[yY]) ;;
-  *) echo "Aborted."; exit 0 ;;
-esac
+if [[ ! "$confirm" =~ ^[yY]([eE][sS])?$ ]]; then
+  echo "Aborted."
+  exit 0
+fi
 
 # ── 1. Stop and disable systemd service ───────────────────────
 step "Stopping tunnel daemon..."

@@ -4,6 +4,33 @@ All notable changes to this project are documented in this file.
 
 ---
 
+## [1.2.0] — 2026-03-17
+
+### ✨ New: `tunnel version` / `tunnel -v`
+- Displays CLI version (from compile-time `AppVersion.Current`)
+- Queries daemon `/api/version` and displays daemon version side-by-side
+- Gracefully shows "not running" if daemon is offline
+
+### 🔄 Changed: `tunnel update`
+- **`--version <tag>`** — target a specific release (e.g. `--version v1.2.0` or `--version 1.2.0`). Defaults to `latest`
+- **MD5 checksum verification** — downloads `{binary}.md5` sidecar file and compares before installing
+  - ⚠️ If no `.md5` file is published, verification is skipped with a warning (non-fatal)
+- Removed `arm64` from download target — `linux-x64` only
+- `User-Agent` now reports current version: `tunnel-updater/1.2.0`
+- Shows `Current → Target` version line before progress bars
+
+### 🧹 CLI Cleanup
+- Removed `github.com/skyber2016/tunnel` line from CLI startup header
+- Version in header now read from `AppVersion.Current` (auto-updates with code, no hardcoding)
+
+### 🏗️ Infrastructure
+- New `Tunnel.Shared/AppVersion.cs` — single source of truth for version string, shared by CLI and Daemon
+- New `VersionModel` in shared models
+- New `GET /api/version` daemon endpoint (no auth required)
+- `ApiClient.GetVersionAsync()` added
+
+---
+
 ## [1.1.0] — 2026-03-17
 
 ### ✨ New Commands

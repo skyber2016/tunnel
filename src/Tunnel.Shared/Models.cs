@@ -85,6 +85,11 @@ public sealed class ProfileListItem
     public bool IsActive { get; set; }
 }
 
+public sealed class VersionModel
+{
+    public string Daemon { get; set; } = string.Empty;
+}
+
 public sealed class ApiResponse
 {
     public bool Success { get; set; }
