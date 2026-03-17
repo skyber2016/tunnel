@@ -10,6 +10,21 @@ All notable changes to this project are documented in this file.
 
 ---
 
+---
+
+## [1.2.4] — 2026-03-17
+
+### 🔄 Changed: `tunnel update`
+- Removed upfront `geteuid()` root check — no longer requires `sudo` pre-validation
+- On `UnauthorizedAccessException` (permission denied), displays a helpful message: `Try again with: sudo tunnel update`
+- Cleaner UX: users run `tunnel update` first; only prompted for `sudo` if actually needed
+
+### 🛠️ Infrastructure
+- Removed `DllImport("libc")` / `geteuid()` P/Invoke — no more native interop in UpdateCommand
+- Post-publish MSBuild target in `.csproj`: auto-generates `<name>-<arch>` + `<name>-<arch>.md5` on `dotnet publish`
+
+---
+
 ## [1.2.3] — 2026-03-17
 
 ### 🔄 Changed: `tunnel update`

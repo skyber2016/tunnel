@@ -6,5 +6,5 @@ namespace Tunnel.Shared;
 /// </summary>
 public static class AppVersion
 {
-    public const string Current = "1.2.3";
+    public const string Current = "1.2.4";
 }
