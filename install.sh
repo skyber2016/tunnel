@@ -33,6 +33,35 @@ info "Checking prerequisites..."
 command -v curl      >/dev/null 2>&1 || error "curl not found. Install: sudo apt install curl"
 command -v systemctl >/dev/null 2>&1 || error "systemctl not found. Ubuntu with systemd is required."
 
+# ── Conflict Detection (Docker-style) ───────────────────────
+# If a previous installation exists, block and require uninstall first.
+info "Checking for existing installation..."
+
+CONFLICT=false
+[[ -f "$INSTALL_CLI" ]]    && CONFLICT=true
+[[ -f "$INSTALL_DAEMON" ]] && CONFLICT=true
+
+if [[ "$CONFLICT" == "true" ]]; then
+  echo ""
+  echo -e "${YELLOW}⚠  A previous version of SSH Tunnel Manager is already installed.${RESET}"
+  echo ""
+  echo "  The following conflicting files were found:"
+  [[ -f "$INSTALL_CLI" ]]    && echo -e "  ${RED}•${RESET} $INSTALL_CLI"
+  [[ -f "$INSTALL_DAEMON" ]] && echo -e "  ${RED}•${RESET} $INSTALL_DAEMON"
+  echo ""
+  echo -e "  You must uninstall the current version before installing again."
+  echo -e "  Run the following command to uninstall:"
+  echo ""
+  echo -e "  ${CYAN}curl -sSL https://raw.githubusercontent.com/skyber2016/tunnel/main/uninstall.sh | bash${RESET}"
+  echo ""
+  echo -e "  To also remove your profile data (~/.tunnel/):"
+  echo -e "  ${CYAN}curl -sSL .../uninstall.sh | bash -s -- --purge${RESET}"
+  echo ""
+  error "Installation blocked. Please uninstall first."
+fi
+
+success "No conflicting installation found."
+
 # ── Detect Architecture ───────────────────────────────────────
 ARCH=$(uname -m)
 case "$ARCH" in
@@ -60,14 +89,12 @@ curl -fSL --progress-bar \
 
 # ── Install CLI ───────────────────────────────────────────────
 info "Installing CLI → ${INSTALL_CLI}"
-[[ -f "$INSTALL_CLI" ]] && sudo mv "$INSTALL_CLI" "${INSTALL_CLI}.old"
 sudo mv "$TMP_CLI" "$INSTALL_CLI"
 sudo chmod +x "$INSTALL_CLI"
 success "CLI installed."
 
 # ── Install Daemon ────────────────────────────────────────────
 info "Installing Daemon → ${INSTALL_DAEMON}"
-[[ -f "$INSTALL_DAEMON" ]] && sudo mv "$INSTALL_DAEMON" "${INSTALL_DAEMON}.old"
 sudo mv "$TMP_DAEMON" "$INSTALL_DAEMON"
 sudo chmod +x "$INSTALL_DAEMON"
 success "Daemon binary installed."

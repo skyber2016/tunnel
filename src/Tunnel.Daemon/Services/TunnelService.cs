@@ -1,5 +1,6 @@
 using Renci.SshNet;
 using Tunnel.Shared.Models;
+using SshConnectionInfo = Renci.SshNet.ConnectionInfo;
 
 namespace Tunnel.Daemon.Services;
 
@@ -47,7 +48,7 @@ public sealed class TunnelService : IDisposable
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
 
         var authMethod = new PrivateKeyAuthenticationMethod(jh.User, new PrivateKeyFile(keyPath));
-        var connInfo = new ConnectionInfo(jh.Host, jh.Port, jh.User, authMethod);
+        var connInfo = new SshConnectionInfo(jh.Host, jh.Port, jh.User, authMethod);
 
         _client = new SshClient(connInfo);
 

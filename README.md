@@ -16,6 +16,29 @@ curl -sSL https://raw.githubusercontent.com/skyber2016/tunnel/main/install.sh | 
 
 > Automatically detects your architecture (`x86_64` → linux-x64, `aarch64` → linux-arm64) and installs the daemon as a systemd user service.
 
+> [!IMPORTANT]
+> **If you have a previous version installed, you must uninstall it first.** The installer will block and display an error if conflicting binaries are found.
+
+---
+
+## Uninstall
+
+Before reinstalling (e.g., to upgrade), remove the existing version:
+
+```bash
+# Remove binaries and service — keeps your profile data (~/.tunnel/)
+curl -sSL https://raw.githubusercontent.com/skyber2016/tunnel/main/uninstall.sh | bash
+
+# Remove everything including all profile data
+curl -sSL https://raw.githubusercontent.com/skyber2016/tunnel/main/uninstall.sh | bash -s -- --purge
+```
+
+The uninstaller will:
+1. Stop and disable the `tunnel.service` systemd unit
+2. Remove `/usr/local/bin/tunnel` and `/usr/local/bin/tunnel-daemon`
+3. Remove the systemd unit file from `~/.config/systemd/user/`
+4. **By default, your profile data (`~/.tunnel/profiles.json`) is preserved** — use `--purge` to delete it
+
 ---
 
 ## Requirements

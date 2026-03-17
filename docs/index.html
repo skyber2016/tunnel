@@ -347,6 +347,7 @@
     <a href="#features">Features</a>
     <a href="#demo">Demo</a>
     <a href="#commands">Commands</a>
+    <a href="#uninstall">Uninstall</a>
     <a href="https://github.com/skyber2016/tunnel" target="_blank" rel="noopener">Docs</a>
   </div>
   <a href="https://github.com/skyber2016/tunnel" class="btn-gh" target="_blank" rel="noopener">
@@ -576,6 +577,99 @@
       <div class="cmd-row">
         <div class="cmd-key">tunnel update [--daemon-only]</div>
         <div class="cmd-desc">Self-update to the latest release from GitHub</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── UNINSTALL ── -->
+<section id="uninstall" style="background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-label">Uninstall</div>
+    <h2 class="section-title">Remove old versions first</h2>
+    <p class="section-sub" style="margin-bottom: 2rem;">
+      Before installing or reinstalling, you must remove any existing installation.
+      The installer will <strong>block with an error</strong> if conflicting binaries are found.
+    </p>
+
+    <!-- Warning box -->
+    <div style="
+      background: rgba(240,192,64,0.06);
+      border: 1px solid rgba(240,192,64,0.25);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex; gap: 0.75rem; align-items: flex-start;
+    ">
+      <span style="font-size: 1.2rem; flex-shrink: 0;">⚠️</span>
+      <div>
+        <p style="color: var(--yellow); font-weight: 600; margin-bottom: 0.25rem;">Conflict check enforced</p>
+        <p style="color: var(--muted); font-size: 0.875rem;">
+          The unofficial or previous versions of <code style="color:var(--cyan2)">tunnel</code> and <code style="color:var(--cyan2)">tunnel-daemon</code>
+          you may have installed will conflict with a new release.
+          You must uninstall these packages before installing a new version.
+        </p>
+      </div>
+    </div>
+
+    <!-- Two command boxes -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+
+      <!-- Remove binaries only -->
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
+          <span>Keep profiles</span>
+        </div>
+        <div class="terminal-body">
+          <div class="term-line" style="margin-bottom:0.75rem; color: var(--muted); font-size:0.75rem;">
+            Removes binaries &amp; service. Keeps <code>~/.tunnel/</code> profiles.
+          </div>
+          <div class="term-line">
+            <span class="term-prompt">$ </span>
+            <span class="term-cmd" style="word-break:break-all; font-size:0.75rem;">curl -sSL .../uninstall.sh | bash</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full purge -->
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
+          <span>Full purge</span>
+        </div>
+        <div class="terminal-body">
+          <div class="term-line" style="margin-bottom:0.75rem; color: var(--muted); font-size:0.75rem;">
+            Removes everything including all profile data in <code>~/.tunnel/</code>.
+          </div>
+          <div class="term-line">
+            <span class="term-prompt">$ </span>
+            <span class="term-cmd" style="word-break:break-all; font-size:0.75rem;">curl -sSL .../uninstall.sh | bash -s -- --purge</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What gets removed table -->
+    <div style="margin-top: 2rem;">
+      <p style="color: var(--muted); font-size: 0.875rem; margin-bottom: 1rem;">What gets removed:</p>
+      <div class="commands-grid">
+        <div class="cmd-row">
+          <div class="cmd-key" style="color: var(--yellow);">/usr/local/bin/tunnel</div>
+          <div class="cmd-desc">CLI binary — always removed</div>
+        </div>
+        <div class="cmd-row">
+          <div class="cmd-key" style="color: var(--yellow);">/usr/local/bin/tunnel-daemon</div>
+          <div class="cmd-desc">Daemon binary — always removed</div>
+        </div>
+        <div class="cmd-row">
+          <div class="cmd-key" style="color: var(--yellow);">~/.config/systemd/user/tunnel.service</div>
+          <div class="cmd-desc">Systemd unit file — always removed</div>
+        </div>
+        <div class="cmd-row">
+          <div class="cmd-key" style="color: var(--muted);">~/.tunnel/profiles.json</div>
+          <div class="cmd-desc">Profile data — <strong>preserved by default</strong>, removed only with <code>--purge</code></div>
+        </div>
       </div>
     </div>
   </div>
