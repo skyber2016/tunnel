@@ -1,10 +1,11 @@
 using Tunnel.Daemon;
 using Tunnel.Daemon.Api;
 using Tunnel.Daemon.Services;
+using Tunnel.Shared;
 
 // ──────────────────────────────────────────────────────────
 // Tunnel Daemon — Minimal API + Systemd User Service
-// Port: 6385 | Auth: Basic (hardcoded)
+// Port: 6385 | Auth: Bearer token from ~/.tunnel/.auth
 // ──────────────────────────────────────────────────────────
 
 var builder = WebApplication.CreateSlimBuilder(args);
@@ -26,21 +27,22 @@ builder.Logging.AddConsole(opts =>
 
 var app = builder.Build();
 
-// ── Basic Auth Middleware ──────────────────────────────────
-// Pre-computed: base64("tunnel:Tun3l@2024!")
-const string ValidAuthHeader = "Basic dHVubmVsOlR1bjNsQDIwMjQh";
+// ── Auth Token ────────────────────────────────────────────
+// Generated once at startup; stored in ~/.tunnel/.auth (chmod 600).
+// CLI reads the same file — no secret ever touches source code.
+var validToken = AuthTokenStore.LoadOrGenerate();
 
 app.Use(async (ctx, next) =>
 {
-    // Health endpoint skips auth
-    if (ctx.Request.Path == "/health")
+    // Health + version endpoints skip auth
+    if (ctx.Request.Path == "/health" || ctx.Request.Path == "/api/version")
     {
         await next();
         return;
     }
 
     if (!ctx.Request.Headers.TryGetValue("Authorization", out var authVal)
-        || authVal.ToString() != ValidAuthHeader)
+        || authVal.ToString() != $"Bearer {validToken}")
     {
         ctx.Response.StatusCode = 401;
         await ctx.Response.WriteAsync("Unauthorized");

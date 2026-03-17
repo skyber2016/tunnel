@@ -29,11 +29,6 @@ public sealed class ReconnectCommand
 
     private static async Task HandleAsync(string? profileName, string? name)
     {
-        if (profileName is null && name is null)
-        {
-            AnsiConsole.MarkupLine("[red]✗ Provide [yellow]--profile-name[/] or [yellow]--name[/].[/]");
-            return;
-        }
         if (profileName is not null && name is not null)
         {
             AnsiConsole.MarkupLine("[red]✗ Use either [yellow]--profile-name[/] or [yellow]--name[/], not both.[/]");
@@ -48,7 +43,19 @@ public sealed class ReconnectCommand
             return;
         }
 
-        if (!await EnsureActiveAsync(api)) return;
+        // Resolve active profile
+        var statusResp = await api.GetStatusAsync();
+        var status = statusResp?.Data;
+
+        if (status?.IsConnected != true || string.IsNullOrEmpty(status.ActiveProfile))
+        {
+            AnsiConsole.MarkupLine("[red]✗ No active tunnel. Run [yellow]tunnel use <name>[/] first.[/]");
+            return;
+        }
+
+        // Default: reconnect active profile when no args provided
+        if (profileName is null && name is null)
+            profileName = status.ActiveProfile;
 
         ApiResponse<string>? resp = null;
 
@@ -82,11 +89,4 @@ public sealed class ReconnectCommand
         }
     }
 
-    private static async Task<bool> EnsureActiveAsync(ApiClient api)
-    {
-        var statusResp = await api.GetStatusAsync();
-        if (statusResp?.Data?.IsConnected == true) return true;
-        AnsiConsole.MarkupLine("[red]✗ No active tunnel. Run [yellow]tunnel use <name>[/] first.[/]");
-        return false;
-    }
 }

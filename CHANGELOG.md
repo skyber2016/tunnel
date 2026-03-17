@@ -6,6 +6,44 @@ All notable changes to this project are documented in this file.
 
 ---
 
+---
+
+## [1.2.2] — 2026-03-17
+
+### 🔒 Security Fix (CRITICAL)
+**Hardcoded Base64 Basic Authentication credential removed from source code.**
+
+Previously the daemon and CLI shared a hardcoded auth header (`Basic dHVubmVsOlR1bjNsQDIwMjQh`) in source. GitGuardian flagged this as an exposed secret.
+
+**New approach — file-based random token:**
+- On daemon startup, `AuthTokenStore.LoadOrGenerate()` generates a 256-bit cryptographically random Bearer token
+- Token is persisted to `~/.tunnel/.auth` with `chmod 600` (owner read/write only)
+- CLI reads the same file at runtime via `AuthTokenStore.Read()`
+- No credentials of any kind exist in source code or compiled binaries
+
+> **Action required:** Run `tunnel stop && systemctl --user restart tunnel` on all machines to regenerate the token. Old Basic Auth tokens are no longer accepted.
+
+### 🔄 Changed: `tunnel reconnect`
+- **Default behavior:** when called with no arguments, automatically reconnects the currently active profile (no need to pass `--profile-name`)
+- `--name <alias>` — still reconnects a single port forwarding within the active profile
+- `--profile-name <name>` — still explicitly reconnects a named profile
+- Providing both options at once is still an error
+
+### 🐛 Bug Fixes
+
+#### `tunnel update` — swap silently failed on `/usr/local/bin/`
+- `mv` to `/usr/local/bin/tunnel` requires root; commands now use `sudo mv` and `sudo chmod +x`
+- `RunShell()` now throws if exit code ≠ 0 so install failures surface immediately instead of silently leaving the old binary in place
+
+### 🛠️ DevOps
+
+- `uninstall.sh` rewritten for `curl | bash` compatibility:
+  - Confirm prompt reads from `/dev/tty` when stdin is a pipe
+  - `|| true` guards on `[[ ]]` checks prevent `set -euo pipefail` early exits
+  - Args passed via `bash -s -- --purge` pattern (consistent with Docker uninstall UX)
+
+---
+
 ## [1.2.1] — 2026-03-17
 
 ### ✨ New: `tunnel reload`
