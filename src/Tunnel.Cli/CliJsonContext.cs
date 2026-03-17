@@ -17,6 +17,7 @@ namespace Tunnel.Cli;
 [JsonSerializable(typeof(RemovePortRequest))]
 [JsonSerializable(typeof(RemoveProfileRequest))]
 [JsonSerializable(typeof(ReconnectRequest))]
+[JsonSerializable(typeof(AddPortRequest))]
 [JsonSerializable(typeof(VersionModel))]
 [JsonSerializable(typeof(ApiResponse<VersionModel>))]
 [JsonSerializable(typeof(ApiResponse))]

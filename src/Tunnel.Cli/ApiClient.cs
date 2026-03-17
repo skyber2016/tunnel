@@ -83,6 +83,16 @@ public sealed class ApiClient : IDisposable
         return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
     }
 
+    public async Task<ApiResponse<string>?> AddPortLiveAsync(
+        string name, int local, int remote, string remoteHost = "127.0.0.1")
+    {
+        var req = new AddPortRequest { Name = name, Local = local, Remote = remote, RemoteHost = remoteHost };
+        var content = JsonContent.Create(req, CliJsonContext.Default.AddPortRequest);
+        var resp = await _http.PostAsync("/api/ports/add", content);
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
+    }
+
     // ── Remove ───────────────────────────────────────────────────────
 
     public async Task<ApiResponse<string>?> RemovePortAsync(string name)
@@ -117,6 +127,13 @@ public sealed class ApiClient : IDisposable
     public async Task<ApiResponse<string>?> CleanAsync()
     {
         var resp = await _http.PostAsync("/api/clean", null);
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
+    }
+
+    public async Task<ApiResponse<string>?> ReloadAsync()
+    {
+        var resp = await _http.PostAsync("/api/reload", null);
         var json = await resp.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
     }

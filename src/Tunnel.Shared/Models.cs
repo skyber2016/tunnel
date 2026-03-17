@@ -31,6 +31,8 @@ public sealed class Profile
 public sealed class ProfilesConfig
 {
     public List<Profile> Profiles { get; set; } = [];
+    /// <summary>Name of the last profile activated via 'tunnel use'. Restored on daemon reload.</summary>
+    public string? ActiveProfile { get; set; }
 }
 
 // ──────────────────────────────────────────────
@@ -53,6 +55,14 @@ public sealed class ReconnectRequest
     public string? ProfileName { get; set; }
     /// <summary>If set, reconnect only the named port forwarding in the active profile.</summary>
     public string? Name { get; set; }
+}
+
+public sealed class AddPortRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public int Local { get; set; }
+    public int Remote { get; set; }
+    public string RemoteHost { get; set; } = "127.0.0.1";
 }
 
 // ──────────────────────────────────────────────

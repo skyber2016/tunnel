@@ -39,54 +39,12 @@ public sealed class AddCommand
             return;
         }
 
-        // Need active profile
-        var statusResp = await api.GetStatusAsync();
-        var status = statusResp?.Data;
+        var resp = await api.AddPortLiveAsync(name, local, remote, remoteHost);
 
-        if (status is null || !status.IsConnected || string.IsNullOrEmpty(status.ActiveProfile))
-        {
-            AnsiConsole.MarkupLine("[red]✗ No active profile. Run [yellow]tunnel use <name>[/] first.[/]");
-            return;
-        }
-
-        var activeProfileName = status.ActiveProfile;
-
-        // Load profiles config
-        var configResp = await api.GetProfilesAsync();
-        var config = configResp?.Data;
-        if (config is null)
-        {
-            AnsiConsole.MarkupLine("[red]✗ Could not retrieve config from daemon.[/]");
-            return;
-        }
-
-        var profile = config.Profiles.FirstOrDefault(p => p.Name == activeProfileName);
-        if (profile is null)
-        {
-            AnsiConsole.MarkupLine($"[red]✗ Active profile '[yellow]{activeProfileName}[/]' not found in config.[/]");
-            return;
-        }
-
-        // Validate unique name
-        if (profile.Ports.Any(p => p.Name == name))
-        {
-            AnsiConsole.MarkupLine($"[red]✗ Port forwarding name '[yellow]{name}[/]' already exists in profile '{activeProfileName}'.[/]");
-            return;
-        }
-
-        profile.Ports.Add(new PortMapping
-        {
-            Name = name, Local = local, Remote = remote, RemoteHost = remoteHost
-        });
-
-        // Hot-reload: push updated config to daemon
-        var saveResp = await api.SaveProfilesAsync(config);
-
-        if (saveResp?.Success == true)
+        if (resp?.Success == true)
             AnsiConsole.MarkupLine(
-                $"[green]✔ Added '[cyan]{name}[/]':[/] localhost:[bold]{local}[/] → {remoteHost}:[bold]{remote}[/] " +
-                $"[grey](profile: {activeProfileName})[/]");
+                $"[green]✔ Added '[cyan]{name}[/]':[/] localhost:[bold]{local}[/] → {remoteHost}:[bold]{remote}[/]");
         else
-            AnsiConsole.MarkupLine($"[red]✗ Error:[/] {saveResp?.Message}");
+            AnsiConsole.MarkupLine($"[red]✗[/] {resp?.Message ?? "No response from daemon."}");
     }
 }

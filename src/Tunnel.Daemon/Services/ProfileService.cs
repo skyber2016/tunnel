@@ -47,6 +47,9 @@ public sealed class ProfileService
         _logger.LogInformation("Config saved to {Path}", ConfigPath);
     }
 
+    /// <summary>Re-reads profiles.json from disk — always returns the latest state.</summary>
+    public Task<ProfilesConfig> ReloadAsync() => Task.FromResult(GetConfig());
+
     private static void EnsureConfigDir()
     {
         var dir = Path.GetDirectoryName(ConfigPath)!;

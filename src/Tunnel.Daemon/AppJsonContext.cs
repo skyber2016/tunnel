@@ -18,6 +18,7 @@ namespace Tunnel.Daemon;
 [JsonSerializable(typeof(RemovePortRequest))]
 [JsonSerializable(typeof(RemoveProfileRequest))]
 [JsonSerializable(typeof(ReconnectRequest))]
+[JsonSerializable(typeof(AddPortRequest))]
 [JsonSerializable(typeof(VersionModel))]
 [JsonSerializable(typeof(ApiResponse))]
 [JsonSerializable(typeof(ApiResponse<string>))]

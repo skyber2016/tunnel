@@ -29,11 +29,17 @@ public static class TunnelEndpoints
             return Results.Ok(ApiResponse<TunnelStatusModel>.Ok(status));
         });
 
-        api.MapPost("/start", async (Profile profile, TunnelService tunnel) =>
+        api.MapPost("/start", async (Profile profile, TunnelService tunnel, ProfileService profiles) =>
         {
             try
             {
                 await tunnel.StartAsync(profile);
+
+                // Persist active profile name to config so daemon can reload it on restart
+                var config = profiles.GetConfig();
+                config.ActiveProfile = profile.Name;
+                await profiles.SaveConfigAsync(config);
+
                 return Results.Ok(ApiResponse<string>.Ok("started",
                     $"Tunnel started: {profile.Name}"));
             }
@@ -43,10 +49,45 @@ public static class TunnelEndpoints
             }
         });
 
-        api.MapPost("/stop", async (TunnelService tunnel) =>
+        api.MapPost("/stop", async (TunnelService tunnel, ProfileService profiles) =>
         {
             await tunnel.StopAsync();
+
+            // Clear persisted active profile
+            var config = profiles.GetConfig();
+            config.ActiveProfile = null;
+            await profiles.SaveConfigAsync(config);
+
             return Results.Ok(ApiResponse<string>.Ok("stopped", "Tunnel stopped"));
+        });
+
+        // ── Reload ─────────────────────────────────────────────────────
+
+        api.MapPost("/reload", async (TunnelService tunnel, ProfileService profiles) =>
+        {
+            var config = await profiles.ReloadAsync();
+            var profileName = config.ActiveProfile;
+
+            if (string.IsNullOrEmpty(profileName))
+                return Results.Ok(ApiResponse<string>.Ok("reloaded",
+                    "Config reloaded. No active profile to reconnect."));
+
+            var profile = config.Profiles.FirstOrDefault(p => p.Name == profileName);
+            if (profile is null)
+                return Results.Ok(ApiResponse<string>.Fail(
+                    $"Active profile '{profileName}' not found in reloaded config."));
+
+            try
+            {
+                await tunnel.StartAsync(profile);
+                return Results.Ok(ApiResponse<string>.Ok("reloaded",
+                    $"Config reloaded and tunnel reconnected: {profileName}"));
+            }
+            catch (Exception ex)
+            {
+                return Results.Ok(ApiResponse<string>.Fail(
+                    $"Config reloaded but reconnect failed: {ex.Message}"));
+            }
         });
 
         // ── Remove ───────────────────────────────────────────────────
@@ -137,6 +178,49 @@ public static class TunnelEndpoints
             await profiles.SaveConfigAsync(config);
             return Results.Ok(ApiResponse<string>.Ok("saved",
                 $"Saved {config.Profiles.Count} profile(s)"));
+        });
+
+        // ── Add port to live tunnel + persist ────────────────────────
+
+        api.MapPost("/ports/add", async (AddPortRequest req,
+            TunnelService tunnel, ProfileService profiles) =>
+        {
+            if (!tunnel.IsConnected || tunnel.ActiveProfileName is null)
+                return Results.Ok(ApiResponse<string>.Fail(
+                    "No active tunnel. Run 'tunnel use <name>' first."));
+
+            var pm = new PortMapping
+            {
+                Name       = req.Name,
+                Local      = req.Local,
+                Remote     = req.Remote,
+                RemoteHost = req.RemoteHost
+            };
+
+            try
+            {
+                // 1. Start forwarding on live SSH connection
+                tunnel.AddPortLive(pm);
+            }
+            catch (Exception ex)
+            {
+                return Results.Ok(ApiResponse<string>.Fail(ex.Message));
+            }
+
+            // 2. Persist to profiles.json
+            var config  = profiles.GetConfig();
+            var profile = config.Profiles.FirstOrDefault(
+                p => p.Name == tunnel.ActiveProfileName);
+
+            if (profile is not null)
+            {
+                profile.Ports.RemoveAll(p => p.Name == req.Name); // idempotent
+                profile.Ports.Add(pm);
+                await profiles.SaveConfigAsync(config);
+            }
+
+            return Results.Ok(ApiResponse<string>.Ok("added",
+                $"Port '{req.Name}' forwarding localhost:{req.Local} → {req.RemoteHost}:{req.Remote}"));
         });
 
         // ── Clean ────────────────────────────────────────────────────

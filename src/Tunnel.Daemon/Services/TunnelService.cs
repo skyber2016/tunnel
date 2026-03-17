@@ -34,9 +34,9 @@ public sealed class TunnelService : IDisposable
         {
             Name       = x.Mapping.Name,
             Profile    = _activeProfile?.Name ?? string.Empty,
-            LocalPort  = (int)x.Forwarder.BoundPort,
-            RemoteHost = x.Forwarder.Host,
-            RemotePort = (int)x.Forwarder.Port,
+            LocalPort  = x.Mapping.Local,                // use config value — BoundPort can be 0 before start
+            RemoteHost = x.Mapping.RemoteHost,           // remote forwarding target (not Forwarder.Host which is local bound addr)
+            RemotePort = x.Mapping.Remote,               // remote forwarding port  (not Forwarder.Port which is local bound port)
             IsStarted  = x.Forwarder.IsStarted
         }).ToList()
     };
@@ -90,6 +90,21 @@ public sealed class TunnelService : IDisposable
         _activeProfile = null;
 
         _logger.LogInformation("Tunnel stopped.");
+    }
+
+    // ── Add port to live tunnel ──────────────────────────────────────
+
+    /// <summary>Adds and starts a new port forwarding on the existing SSH connection.</summary>
+    public void AddPortLive(PortMapping pm)
+    {
+        if (!IsConnected)
+            throw new InvalidOperationException("No active SSH connection.");
+
+        if (_activePorts.Any(x => x.Mapping.Name == pm.Name))
+            throw new InvalidOperationException(
+                $"Port forwarding '{pm.Name}' already exists in the active session.");
+
+        AddAndStartPort(pm);
     }
 
     // ── Remove ──────────────────────────────────────────────────────

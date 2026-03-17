@@ -4,6 +4,35 @@ All notable changes to this project are documented in this file.
 
 ---
 
+---
+
+## [1.2.1] — 2026-03-17
+
+### ✨ New: `tunnel reload`
+- Re-reads `~/.tunnel/profiles.json` from disk
+- If an `ActiveProfile` is stored, automatically reconnects that tunnel (including all port forwardings)
+- Useful after manually editing the config file or after daemon restart
+
+### 🔄 Changed: `tunnel use`
+- Now persists the active profile name to `profiles.json` (`ActiveProfile` field) after connecting
+- Allows `tunnel reload` to reconnect automatically without user re-running `tunnel use`
+
+### 🔄 Changed: `tunnel stop`
+- Now clears `ActiveProfile` in `profiles.json` so `tunnel reload` won't re-activate a stopped tunnel
+
+### 🏗️ Infrastructure
+- `ProfilesConfig` model: added `ActiveProfile?: string` field (backward-compatible, null if none)
+- `ProfileService.ReloadAsync()` — re-reads config from disk
+- `POST /api/reload` daemon endpoint: reload config → reconnect active profile
+- `POST /api/start` now persists `ActiveProfile` after successful connect
+- `POST /api/stop` now clears `ActiveProfile` after disconnect
+- `ApiClient.ReloadAsync()` added
+
+### 🐛 Bug Fixes
+- **`tunnel status` showed empty port list** after `tunnel add` — root cause: `/api/start` only forwarded ports from config at connect time, new ports added later were not tracked. Fixed in `v1.2.0-patch` (see previous entry)
+
+---
+
 ## [1.2.0] — 2026-03-17
 
 ### ✨ New: `tunnel version` / `tunnel -v`
