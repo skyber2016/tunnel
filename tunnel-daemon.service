@@ -1,0 +1,25 @@
+[Unit]
+Description=SSH Tunnel Manager Daemon
+Documentation=https://github.com/skyber2016/tunnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/tunnel-daemon
+Restart=on-failure
+RestartSec=5s
+
+# Security hardening (user-level)
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.tunnel
+
+# Env: chỉ bind localhost
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_NOLOGO=1
+
+[Install]
+WantedBy=default.target

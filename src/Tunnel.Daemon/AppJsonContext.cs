@@ -1,0 +1,26 @@
+using System.Text.Json.Serialization;
+using Tunnel.Shared.Models;
+
+namespace Tunnel.Daemon;
+
+/// <summary>
+/// AOT-safe JSON serialization context for Minimal API.
+/// All types used in endpoints phải được khai báo ở đây.
+/// Không dùng reflection - compile-time source generation.
+/// </summary>
+[JsonSerializable(typeof(ProfilesConfig))]
+[JsonSerializable(typeof(Profile))]
+[JsonSerializable(typeof(JumpHostConfig))]
+[JsonSerializable(typeof(PortMapping))]
+[JsonSerializable(typeof(TunnelStatusModel))]
+[JsonSerializable(typeof(PortStatus))]
+[JsonSerializable(typeof(ApiResponse))]
+[JsonSerializable(typeof(ApiResponse<string>))]
+[JsonSerializable(typeof(ApiResponse<TunnelStatusModel>))]
+[JsonSerializable(typeof(ApiResponse<ProfilesConfig>))]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    PropertyNameCaseInsensitive = true,
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+internal partial class AppJsonContext : JsonSerializerContext;

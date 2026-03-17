@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "dgSpecHash": "VknhnLb6J8c=",
+  "success": true,
+  "projectFilePath": "d:\\Projects\\tunnel\\src\\Tunnel.Daemon\\Tunnel.Daemon.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\bouncycastle.cryptography\\2.4.0\\bouncycastle.cryptography.2.4.0.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\microsoft.dotnet.ilcompiler\\9.0.5\\microsoft.dotnet.ilcompiler.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.5\\microsoft.net.illink.tasks.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\runtime.linux-arm64.microsoft.dotnet.ilcompiler\\9.0.5\\runtime.linux-arm64.microsoft.dotnet.ilcompiler.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\runtime.linux-x64.microsoft.dotnet.ilcompiler\\9.0.5\\runtime.linux-x64.microsoft.dotnet.ilcompiler.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\ssh.net\\2024.2.0\\ssh.net.2024.2.0.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\microsoft.netcore.app.runtime.linux-x64\\9.0.5\\microsoft.netcore.app.runtime.linux-x64.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\microsoft.netcore.app.runtime.linux-arm64\\9.0.5\\microsoft.netcore.app.runtime.linux-arm64.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.linux-x64\\9.0.5\\microsoft.aspnetcore.app.runtime.linux-x64.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.linux-arm64\\9.0.5\\microsoft.aspnetcore.app.runtime.linux-arm64.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\runtime.win-x64.microsoft.dotnet.ilcompiler\\9.0.5\\runtime.win-x64.microsoft.dotnet.ilcompiler.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\microsoft.netcore.app.host.linux-x64\\9.0.5\\microsoft.netcore.app.host.linux-x64.9.0.5.nupkg.sha512",
+    "C:\\Users\\duynh2.OFFICEVNPAY\\.nuget\\packages\\microsoft.netcore.app.host.linux-arm64\\9.0.5\\microsoft.netcore.app.host.linux-arm64.9.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}
