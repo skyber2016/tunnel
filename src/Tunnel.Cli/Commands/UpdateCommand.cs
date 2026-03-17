@@ -8,9 +8,9 @@ using Tunnel.Shared;
 namespace Tunnel.Cli.Commands;
 
 /// <summary>
-/// sudo tunnel update [--version v1.x.x] [--daemon-only]
+/// tunnel update [--version v1.x.x] [--daemon-only]
 /// Checks latest version from GitHub API, downloads and swaps binaries.
-/// Must be run with sudo (root) to write to /usr/local/bin/.
+/// If permission denied, suggests running with sudo.
 /// </summary>
 public sealed class UpdateCommand
 {
@@ -40,19 +40,8 @@ public sealed class UpdateCommand
         return cmd;
     }
 
-    // P/Invoke — geteuid() to check if running as root
-    [DllImport("libc")]
-    private static extern uint geteuid();
-
     private static async Task HandleAsync(bool daemonOnly, string? version)
     {
-        // ── Root check ──────────────────────────────────────────────
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && geteuid() != 0)
-        {
-            AnsiConsole.MarkupLine("[red]✗ Permission denied.[/] Run with sudo:");
-            AnsiConsole.MarkupLine("[cyan]  sudo tunnel update[/]");
-            return;
-        }
 
         using var http = new HttpClient();
         http.DefaultRequestHeaders.UserAgent.ParseAdd(
@@ -169,19 +158,29 @@ public sealed class UpdateCommand
         // ── Atomic swap — pure C#, no shell ─────────────────────────
         task.Description = $"[grey]Installing {binaryName}...[/]";
 
-        if (File.Exists(installPath))
-            File.Move(installPath, backupPath, overwrite: true);
-
-        File.Move(tmpPath, installPath, overwrite: true);
-
-        // Set executable permissions (755)
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        try
         {
-            File.SetUnixFileMode(installPath,
-                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            if (File.Exists(installPath))
+                File.Move(installPath, backupPath, overwrite: true);
+
+            File.Move(tmpPath, installPath, overwrite: true);
+
+            // Set executable permissions (755)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
+                RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                File.SetUnixFileMode(installPath,
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            task.Description = $"[red]✗ {binaryName} — permission denied[/]";
+            AnsiConsole.MarkupLine($"\n[red]✗ Permission denied writing to {installPath}[/]");
+            AnsiConsole.MarkupLine("[yellow]  Try again with:[/] [cyan]sudo tunnel update[/]");
+            throw;
         }
 
         task.Value = 100;
