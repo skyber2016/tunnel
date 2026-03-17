@@ -8,6 +8,20 @@ All notable changes to this project are documented in this file.
 
 ---
 
+---
+
+## [1.2.3] — 2026-03-17
+
+### 🔄 Changed: `tunnel update`
+- **Version check before download:** queries GitHub Releases API (`/releases/latest`) to get the newest `tag_name` and compares with `AppVersion.Current`. If already up to date, prints `✓ Already up to date` and exits — no download
+- **Removed MD5 checksum verification.** Download integrity is handled by HTTPS + GitHub CDN
+- `--version <tag>` still works — skips the API check and downloads the specified tag directly
+- Install uses pure C# `File.Move` + `File.SetUnixFileMode(755)` — no shell-out to `sudo` or `bash`
+- Root check via `geteuid()` — prompts `sudo tunnel update` if not root
+- Daemon restart under `sudo` uses `runuser -l $SUDO_USER` to target the original user's systemd scope
+
+---
+
 ## [1.2.2] — 2026-03-17
 
 ### 🔒 Security Fix (CRITICAL)

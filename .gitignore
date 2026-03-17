@@ -52,3 +52,4 @@ Desktop.ini
 *.log
 /tmp/
 out
+.agent
