@@ -14,6 +14,8 @@ public sealed class JumpHostConfig
 
 public sealed class PortMapping
 {
+    /// <summary>Unique name for this port forwarding rule (used by tunnel remove --name).</summary>
+    public string Name { get; set; } = string.Empty;
     public int Local { get; set; }
     public int Remote { get; set; }
     public string RemoteHost { get; set; } = "127.0.0.1";
@@ -32,11 +34,35 @@ public sealed class ProfilesConfig
 }
 
 // ──────────────────────────────────────────────
+// API Request Models
+// ──────────────────────────────────────────────
+
+public sealed class RemovePortRequest
+{
+    public string Name { get; set; } = string.Empty;
+}
+
+public sealed class RemoveProfileRequest
+{
+    public string ProfileName { get; set; } = string.Empty;
+}
+
+public sealed class ReconnectRequest
+{
+    /// <summary>If set, reconnect the entire profile (close + reopen).</summary>
+    public string? ProfileName { get; set; }
+    /// <summary>If set, reconnect only the named port forwarding in the active profile.</summary>
+    public string? Name { get; set; }
+}
+
+// ──────────────────────────────────────────────
 // API Response / Status Models
 // ──────────────────────────────────────────────
 
 public sealed class PortStatus
 {
+    public string Name { get; set; } = string.Empty;
+    public string Profile { get; set; } = string.Empty;
     public int LocalPort { get; set; }
     public int RemotePort { get; set; }
     public string RemoteHost { get; set; } = string.Empty;
@@ -49,6 +75,14 @@ public sealed class TunnelStatusModel
     public string ActiveProfile { get; set; } = string.Empty;
     public string JumpHost { get; set; } = string.Empty;
     public List<PortStatus> Ports { get; set; } = [];
+}
+
+public sealed class ProfileListItem
+{
+    public string Name { get; set; } = string.Empty;
+    public string Host { get; set; } = string.Empty;
+    public string User { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
 }
 
 public sealed class ApiResponse

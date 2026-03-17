@@ -4,8 +4,8 @@ using Tunnel.Shared.Models;
 namespace Tunnel.Cli;
 
 /// <summary>
-/// AOT-safe JSON context cho CLI (gọi API Daemon).
-/// Phải đăng ký đúng tất cả types để tránh reflection lúc runtime.
+/// AOT-safe JSON context for CLI (communicates with Daemon API).
+/// All types must be registered to avoid reflection at runtime.
 /// </summary>
 [JsonSerializable(typeof(ProfilesConfig))]
 [JsonSerializable(typeof(Profile))]
@@ -13,6 +13,10 @@ namespace Tunnel.Cli;
 [JsonSerializable(typeof(PortMapping))]
 [JsonSerializable(typeof(TunnelStatusModel))]
 [JsonSerializable(typeof(PortStatus))]
+[JsonSerializable(typeof(ProfileListItem))]
+[JsonSerializable(typeof(RemovePortRequest))]
+[JsonSerializable(typeof(RemoveProfileRequest))]
+[JsonSerializable(typeof(ReconnectRequest))]
 [JsonSerializable(typeof(ApiResponse))]
 [JsonSerializable(typeof(ApiResponse<string>))]
 [JsonSerializable(typeof(ApiResponse<TunnelStatusModel>))]

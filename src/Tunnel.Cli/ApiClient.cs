@@ -12,7 +12,6 @@ public sealed class ApiClient : IDisposable
 {
     private readonly HttpClient _http;
 
-    // Hardcoded Basic Auth — must match ValidAuthHeader in Daemon/Program.cs
     // base64("tunnel:Tun3l@2024!") = "dHVubmVsOlR1bjNsQDIwMjQh"
     private const string AuthHeader = "Basic dHVubmVsOlR1bjNsQDIwMjQh";
     private const string BaseUrl = "http://localhost:6385";
@@ -27,7 +26,6 @@ public sealed class ApiClient : IDisposable
         _http.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", AuthHeader);
     }
 
-    /// <summary>Returns true if the daemon process is reachable.</summary>
     public bool IsDaemonRunning()
     {
         try
@@ -38,11 +36,15 @@ public sealed class ApiClient : IDisposable
         catch { return false; }
     }
 
+    // ── Status ──────────────────────────────────────────────────────
+
     public async Task<ApiResponse<TunnelStatusModel>?> GetStatusAsync()
     {
         var json = await _http.GetStringAsync("/api/status");
         return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseTunnelStatusModel);
     }
+
+    // ── Tunnel Control ───────────────────────────────────────────────
 
     public async Task<ApiResponse<string>?> StartTunnelAsync(Profile profile)
     {
@@ -59,6 +61,8 @@ public sealed class ApiClient : IDisposable
         return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
     }
 
+    // ── Profile Management ───────────────────────────────────────────
+
     public async Task<ApiResponse<ProfilesConfig>?> GetProfilesAsync()
     {
         var json = await _http.GetStringAsync("/api/profiles");
@@ -69,6 +73,44 @@ public sealed class ApiClient : IDisposable
     {
         var content = JsonContent.Create(config, CliJsonContext.Default.ProfilesConfig);
         var resp = await _http.PostAsync("/api/profiles", content);
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
+    }
+
+    // ── Remove ───────────────────────────────────────────────────────
+
+    public async Task<ApiResponse<string>?> RemovePortAsync(string name)
+    {
+        var req = new RemovePortRequest { Name = name };
+        var content = JsonContent.Create(req, CliJsonContext.Default.RemovePortRequest);
+        var resp = await _http.PostAsync("/api/remove/port", content);
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
+    }
+
+    public async Task<ApiResponse<string>?> RemoveProfileAsync(string profileName)
+    {
+        var req = new RemoveProfileRequest { ProfileName = profileName };
+        var content = JsonContent.Create(req, CliJsonContext.Default.RemoveProfileRequest);
+        var resp = await _http.PostAsync("/api/remove/profile", content);
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
+    }
+
+    // ── Reconnect ────────────────────────────────────────────────────
+
+    public async Task<ApiResponse<string>?> ReconnectAsync(string? profileName = null, string? name = null)
+    {
+        var req = new ReconnectRequest { ProfileName = profileName, Name = name };
+        var content = JsonContent.Create(req, CliJsonContext.Default.ReconnectRequest);
+        var resp = await _http.PostAsync("/api/reconnect", content);
+        var json = await resp.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
+    }
+
+    public async Task<ApiResponse<string>?> CleanAsync()
+    {
+        var resp = await _http.PostAsync("/api/clean", null);
         var json = await resp.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize(json, CliJsonContext.Default.ApiResponseString);
     }

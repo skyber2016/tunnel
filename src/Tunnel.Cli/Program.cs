@@ -18,7 +18,10 @@ rootCommand.AddCommand(new AddCommand().Build());
 rootCommand.AddCommand(new ListCommand().Build());
 rootCommand.AddCommand(new UseCommand().Build());
 rootCommand.AddCommand(new StopCommand().Build());
-rootCommand.AddCommand(new UpdateCommand().Build());
 rootCommand.AddCommand(new StatusCommand().Build());
+rootCommand.AddCommand(new RemoveCommand().Build());
+rootCommand.AddCommand(new ReconnectCommand().Build());
+rootCommand.AddCommand(new CleanCommand().Build());
+rootCommand.AddCommand(new UpdateCommand().Build());
 
 return await rootCommand.InvokeAsync(args);

@@ -5,13 +5,13 @@ namespace Tunnel.Cli.Commands;
 
 /// <summary>
 /// tunnel list
-/// Lists all profiles from daemon (falls back to local file if daemon is not running).
+/// Displays all profiles with connection status: Profile | Host | User | Status
 /// </summary>
 public sealed class ListCommand
 {
     public Command Build()
     {
-        var cmd = new Command("list", "List all SSH profiles");
+        var cmd = new Command("list", "List all SSH profiles and their connection status");
         cmd.SetHandler(async () => await HandleAsync());
         return cmd;
     }
@@ -22,59 +22,71 @@ public sealed class ListCommand
 
         if (!api.IsDaemonRunning())
         {
-            var localPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".tunnel", "profiles.json");
-
-            AnsiConsole.MarkupLine("[yellow]⚠ Daemon is not running. Reading local file:[/]");
-
-            if (!File.Exists(localPath))
-            {
-                AnsiConsole.MarkupLine("[grey]No profiles yet.[/]");
-                return;
-            }
-
-            var json = File.ReadAllText(localPath);
-            var config = System.Text.Json.JsonSerializer.Deserialize(
-                json, CliJsonContext.Default.ProfilesConfig);
-            RenderTable(config?.Profiles ?? []);
+            AnsiConsole.MarkupLine("[yellow]⚠ Daemon is not running. Showing local config only.[/]");
+            await ShowLocalAsync(api);
             return;
         }
 
-        var resp = await api.GetProfilesAsync();
-        RenderTable(resp?.Data?.Profiles ?? []);
-    }
+        var configResp = await api.GetProfilesAsync();
+        var config = configResp?.Data;
 
-    private static void RenderTable(IList<Tunnel.Shared.Models.Profile> profiles)
-    {
-        if (profiles.Count == 0)
+        if (config is null || config.Profiles.Count == 0)
         {
-            AnsiConsole.MarkupLine("[grey]No profiles found. Use 'tunnel new <name>' to create one.[/]");
+            AnsiConsole.MarkupLine("[grey]No profiles found. Create one with:[/] [cyan]tunnel new <name>[/]");
             return;
         }
+
+        // Get active profile name from status
+        string activeProfile = string.Empty;
+        var statusResp = await api.GetStatusAsync();
+        if (statusResp?.Data?.IsConnected == true)
+            activeProfile = statusResp.Data.ActiveProfile;
 
         var table = new Table()
             .Border(TableBorder.Rounded)
             .BorderColor(Color.Grey)
+            .Title("[bold]SSH Profiles[/]")
             .AddColumn(new TableColumn("[cyan]Profile[/]"))
-            .AddColumn(new TableColumn("[cyan]Jump Host[/]"))
+            .AddColumn(new TableColumn("[cyan]Host[/]"))
             .AddColumn(new TableColumn("[cyan]User[/]"))
-            .AddColumn(new TableColumn("[cyan]Ports[/]"));
+            .AddColumn(new TableColumn("[cyan]Ports[/]").Centered())
+            .AddColumn(new TableColumn("[cyan]Status[/]").Centered());
 
-        foreach (var p in profiles)
+        foreach (var p in config.Profiles)
         {
-            var portsSummary = p.Ports.Count == 0
-                ? "[grey]none[/]"
-                : string.Join(", ", p.Ports.Select(pm => $"{pm.Local}→{pm.Remote}"));
+            var isActive = p.Name == activeProfile;
+            var nameMark  = isActive ? $"[bold green]{p.Name}[/]" : p.Name;
+            var statusBadge = isActive ? "[green]● ACTIVE[/]" : "[grey]○ idle[/]";
+            var portCount = p.Ports.Count.ToString();
 
-            table.AddRow(
-                $"[yellow]{p.Name}[/]",
-                p.JumpHost.Host,
-                p.JumpHost.User,
-                portsSummary);
+            table.AddRow(nameMark, p.JumpHost.Host, p.JumpHost.User, portCount, statusBadge);
         }
 
         AnsiConsole.Write(table);
-        AnsiConsole.MarkupLine($"[grey]{profiles.Count} profile(s) total.[/]");
+        AnsiConsole.MarkupLine($"[grey]{config.Profiles.Count} profile(s). " +
+            $"Use [cyan]tunnel use <name>[/] to connect.[/]");
+    }
+
+    private static async Task ShowLocalAsync(ApiClient api)
+    {
+        var configResp = await api.GetProfilesAsync();
+        var config = configResp?.Data;
+        if (config is null || config.Profiles.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[grey]No profiles found.[/]");
+            return;
+        }
+
+        var table = new Table()
+            .Border(TableBorder.Simple)
+            .AddColumn("Profile")
+            .AddColumn("Host")
+            .AddColumn("User")
+            .AddColumn("Ports");
+
+        foreach (var p in config.Profiles)
+            table.AddRow(p.Name, p.JumpHost.Host, p.JumpHost.User, p.Ports.Count.ToString());
+
+        AnsiConsole.Write(table);
     }
 }

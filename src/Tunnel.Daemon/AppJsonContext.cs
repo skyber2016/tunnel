@@ -5,8 +5,8 @@ namespace Tunnel.Daemon;
 
 /// <summary>
 /// AOT-safe JSON serialization context for Minimal API.
-/// All types used in endpoints phải được khai báo ở đây.
-/// Không dùng reflection - compile-time source generation.
+/// All types used in endpoints must be declared here.
+/// No reflection — compile-time source generation.
 /// </summary>
 [JsonSerializable(typeof(ProfilesConfig))]
 [JsonSerializable(typeof(Profile))]
@@ -14,10 +14,15 @@ namespace Tunnel.Daemon;
 [JsonSerializable(typeof(PortMapping))]
 [JsonSerializable(typeof(TunnelStatusModel))]
 [JsonSerializable(typeof(PortStatus))]
+[JsonSerializable(typeof(ProfileListItem))]
+[JsonSerializable(typeof(RemovePortRequest))]
+[JsonSerializable(typeof(RemoveProfileRequest))]
+[JsonSerializable(typeof(ReconnectRequest))]
 [JsonSerializable(typeof(ApiResponse))]
 [JsonSerializable(typeof(ApiResponse<string>))]
 [JsonSerializable(typeof(ApiResponse<TunnelStatusModel>))]
 [JsonSerializable(typeof(ApiResponse<ProfilesConfig>))]
+[JsonSerializable(typeof(List<ProfileListItem>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     PropertyNameCaseInsensitive = true,

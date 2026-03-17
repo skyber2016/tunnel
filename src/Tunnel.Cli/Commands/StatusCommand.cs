@@ -5,13 +5,15 @@ namespace Tunnel.Cli.Commands;
 
 /// <summary>
 /// tunnel status
-/// Displays a detailed table of all active port forwarding connections.
+/// Displays port forwarding details of the ACTIVE profile.
+/// Columns: Name | Profile | Local Port | Remote Host | Remote Port | Status
+/// Requires an active tunnel connection.
 /// </summary>
 public sealed class StatusCommand
 {
     public Command Build()
     {
-        var cmd = new Command("status", "Show status of active tunnel connections");
+        var cmd = new Command("status", "Show port forwarding status of the active tunnel");
         cmd.SetHandler(async () => await HandleAsync());
         return cmd;
     }
@@ -38,54 +40,54 @@ public sealed class StatusCommand
             return;
         }
 
-        // ── Header ─────────────────────────────────────────────────────
-        if (status.IsConnected)
+        if (!status.IsConnected)
         {
-            var connRule = new Rule($"[green]● CONNECTED[/] — [yellow]{status.ActiveProfile}[/]");
-            connRule.RuleStyle(Style.Parse("green"));
-            AnsiConsole.Write(connRule);
-            AnsiConsole.MarkupLine($"[grey]Jump Host:[/] {status.JumpHost}");
-        }
-        else
-        {
-            var idleRule = new Rule("[grey]○ IDLE — No active tunnel[/]");
+            var idleRule = new Rule("[grey]○ No active tunnel[/]");
             idleRule.RuleStyle(Style.Parse("grey"));
             AnsiConsole.Write(idleRule);
-        }
-
-        AnsiConsole.WriteLine();
-
-        // ── Port Connections Table ─────────────────────────────────────
-        if (status.Ports.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[grey]No active port forwarding connections.[/]");
+            AnsiConsole.MarkupLine("[grey]Connect with:[/] [cyan]tunnel use <profile>[/]");
             return;
         }
 
+        // ── Header ────────────────────────────────────────────────────
+        var connRule = new Rule($"[green]● CONNECTED[/] — [yellow]{status.ActiveProfile}[/]");
+        connRule.RuleStyle(Style.Parse("green"));
+        AnsiConsole.Write(connRule);
+        AnsiConsole.MarkupLine($"[grey]Jump Host:[/] {status.JumpHost}");
+        AnsiConsole.WriteLine();
+
+        if (status.Ports.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[grey]No port forwarding rules. Add one with:[/] " +
+                "[cyan]tunnel add --name <n> --local <p> --remote <p>[/]");
+            return;
+        }
+
+        // ── Port Table ────────────────────────────────────────────────
         var table = new Table()
             .Border(TableBorder.Rounded)
             .BorderColor(Color.Grey)
-            .Title("[bold]Port Forwarding Connections[/]")
-            .AddColumn(new TableColumn("#").Centered())
+            .Title("[bold]Port Forwarding Rules[/]")
+            .AddColumn(new TableColumn("[cyan]Name[/]"))
+            .AddColumn(new TableColumn("[cyan]Profile[/]"))
             .AddColumn(new TableColumn("[cyan]Local Port[/]").Centered())
-            .AddColumn(new TableColumn("[cyan]Direction[/]").Centered())
-            .AddColumn(new TableColumn("[cyan]Remote[/]"))
+            .AddColumn(new TableColumn("[cyan]Remote Host[/]"))
+            .AddColumn(new TableColumn("[cyan]Remote Port[/]").Centered())
             .AddColumn(new TableColumn("[cyan]Status[/]").Centered());
 
-        for (int i = 0; i < status.Ports.Count; i++)
+        foreach (var p in status.Ports)
         {
-            var p = status.Ports[i];
             var badge = p.IsStarted ? "[green]● OPEN[/]" : "[red]○ CLOSED[/]";
-
             table.AddRow(
-                $"[grey]{i + 1}[/]",
+                $"[bold]{p.Name}[/]",
+                p.Profile,
                 $"[bold]:{p.LocalPort}[/]",
-                "[grey]→[/]",
-                $"{p.RemoteHost}[grey]:[/]{p.RemotePort}",
+                p.RemoteHost,
+                $":{p.RemotePort}",
                 badge);
         }
 
         AnsiConsole.Write(table);
-        AnsiConsole.MarkupLine($"[grey]{status.Ports.Count} port(s) forwarded.[/]");
+        AnsiConsole.MarkupLine($"[grey]{status.Ports.Count} rule(s) active.[/]");
     }
 }

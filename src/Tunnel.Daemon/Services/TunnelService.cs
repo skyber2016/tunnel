@@ -11,13 +11,16 @@ namespace Tunnel.Daemon.Services;
 public sealed class TunnelService : IDisposable
 {
     private SshClient? _client;
-    private readonly List<ForwardedPortLocal> _activePorts = [];
+    private readonly List<(PortMapping Mapping, ForwardedPortLocal Forwarder)> _activePorts = [];
     private Profile? _activeProfile;
     private readonly ILogger<TunnelService> _logger;
 
     public TunnelService(ILogger<TunnelService> logger) => _logger = logger;
 
     public bool IsConnected => _client?.IsConnected == true;
+    public string? ActiveProfileName => _activeProfile?.Name;
+
+    // ── Status ──────────────────────────────────────────────────────
 
     /// <summary>Returns full status including per-port connection details.</summary>
     public TunnelStatusModel GetStatus() => new()
@@ -27,14 +30,18 @@ public sealed class TunnelService : IDisposable
         JumpHost = _activeProfile?.JumpHost is { } jh
             ? $"{jh.User}@{jh.Host}:{jh.Port}"
             : string.Empty,
-        Ports = _activePorts.Select(p => new PortStatus
+        Ports = _activePorts.Select(x => new PortStatus
         {
-            LocalPort = (int)p.BoundPort,
-            RemoteHost = p.Host,
-            RemotePort = (int)p.Port,
-            IsStarted = p.IsStarted
+            Name       = x.Mapping.Name,
+            Profile    = _activeProfile?.Name ?? string.Empty,
+            LocalPort  = (int)x.Forwarder.BoundPort,
+            RemoteHost = x.Forwarder.Host,
+            RemotePort = (int)x.Forwarder.Port,
+            IsStarted  = x.Forwarder.IsStarted
         }).ToList()
     };
+
+    // ── Start / Stop ────────────────────────────────────────────────
 
     /// <summary>Connects to the jump host and begins forwarding all ports from the profile.</summary>
     public async Task StartAsync(Profile profile)
@@ -59,17 +66,7 @@ public sealed class TunnelService : IDisposable
 
         foreach (var pm in profile.Ports)
         {
-            var fwdPort = new ForwardedPortLocal(
-                "127.0.0.1", (uint)pm.Local,
-                pm.RemoteHost, (uint)pm.Remote);
-
-            _client.AddForwardedPort(fwdPort);
-            fwdPort.Start();
-            _activePorts.Add(fwdPort);
-
-            _logger.LogInformation(
-                "  forwarding localhost:{Local} -> {RemoteHost}:{Remote}",
-                pm.Local, pm.RemoteHost, pm.Remote);
+            AddAndStartPort(pm);
         }
 
         _activeProfile = profile;
@@ -80,10 +77,10 @@ public sealed class TunnelService : IDisposable
     {
         if (!IsConnected && _activePorts.Count == 0) return;
 
-        foreach (var port in _activePorts)
+        foreach (var (_, fwd) in _activePorts)
         {
-            if (port.IsStarted) port.Stop();
-            port.Dispose();
+            if (fwd.IsStarted) fwd.Stop();
+            fwd.Dispose();
         }
         _activePorts.Clear();
 
@@ -95,9 +92,78 @@ public sealed class TunnelService : IDisposable
         _logger.LogInformation("Tunnel stopped.");
     }
 
+    // ── Remove ──────────────────────────────────────────────────────
+
+    /// <summary>Removes a port forwarding by name within the active profile.</summary>
+    public bool RemovePort(string name)
+    {
+        var idx = _activePorts.FindIndex(x => x.Mapping.Name == name);
+        if (idx < 0) return false;
+
+        var (_, fwd) = _activePorts[idx];
+        if (fwd.IsStarted) fwd.Stop();
+        fwd.Dispose();
+        _activePorts.RemoveAt(idx);
+
+        _logger.LogInformation("Port forwarding '{Name}' removed.", name);
+        return true;
+    }
+
+    // ── Reconnect ───────────────────────────────────────────────────
+
+    /// <summary>Closes and reopens the entire SSH connection (profile + all ports).</summary>
+    public async Task ReconnectProfileAsync()
+    {
+        if (_activeProfile is null) throw new InvalidOperationException("No active profile.");
+        var profile = _activeProfile;
+        await StopAsync();
+        await StartAsync(profile);
+        _logger.LogInformation("Profile '{Name}' reconnected.", profile.Name);
+    }
+
+    /// <summary>Stops and restarts a single port forwarding by name within the active profile.</summary>
+    public bool ReconnectPort(string name)
+    {
+        var idx = _activePorts.FindIndex(x => x.Mapping.Name == name);
+        if (idx < 0) return false;
+
+        var (mapping, fwd) = _activePorts[idx];
+
+        if (fwd.IsStarted) fwd.Stop();
+        fwd.Dispose();
+        _activePorts.RemoveAt(idx);
+
+        var newFwd = AddAndStartPort(mapping, insertAt: idx);
+        _logger.LogInformation("Port forwarding '{Name}' reconnected on :{Port}.", name, newFwd.BoundPort);
+        return true;
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────
+
+    private ForwardedPortLocal AddAndStartPort(PortMapping pm, int? insertAt = null)
+    {
+        var fwdPort = new ForwardedPortLocal(
+            "127.0.0.1", (uint)pm.Local,
+            pm.RemoteHost, (uint)pm.Remote);
+
+        _client!.AddForwardedPort(fwdPort);
+        fwdPort.Start();
+
+        if (insertAt.HasValue)
+            _activePorts.Insert(insertAt.Value, (pm, fwdPort));
+        else
+            _activePorts.Add((pm, fwdPort));
+
+        _logger.LogInformation(
+            "  forwarding localhost:{Local} -> {RemoteHost}:{Remote} [{Name}]",
+            pm.Local, pm.RemoteHost, pm.Remote, pm.Name);
+
+        return fwdPort;
+    }
+
     public void Dispose()
     {
-        _activePorts.ForEach(p => p.Dispose());
+        foreach (var (_, fwd) in _activePorts) fwd.Dispose();
         _client?.Dispose();
     }
 }

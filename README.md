@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](LICENSE)
 [![.NET 9](https://img.shields.io/badge/.NET-9.0-blue.svg)](https://dotnet.microsoft.com)
-[![Platform](https://img.shields.io/badge/platform-linux--x64%20%7C%20linux--arm64-green.svg)]()
+[![Platform](https://img.shields.io/badge/platform-linux--x64-green.svg)]()
 
 ---
 
@@ -59,28 +59,13 @@ tunnel new prod-db
 
 You'll be prompted for:
 - Jump host address (e.g., `jump.example.com`)
-- SSH user  
+- SSH user
 - SSH port (default: `22`)
 - SSH private key path (default: `~/.ssh/id_rsa`)
 
 ---
 
-### 2. Add port mappings
-
-```bash
-# Forward PostgreSQL
-tunnel add prod-db --local 5432 --remote 5432
-
-# Forward Redis on an internal host
-tunnel add prod-db --local 6379 --remote 6379 --remote-host redis.internal
-
-# Forward a web server
-tunnel add prod-db --local 8080 --remote 80
-```
-
----
-
-### 3. Connect
+### 2. Connect
 
 ```bash
 tunnel use prod-db
@@ -88,30 +73,86 @@ tunnel use prod-db
 
 ---
 
-### 4. View active connections
+### 3. Add port mappings (requires active profile)
 
 ```bash
+# Forward PostgreSQL — named "postgres"
+tunnel add --name postgres --local 5432 --remote 5432
+
+# Forward Redis on an internal host
+tunnel add --name redis --local 6379 --remote 6379 --remote-host redis.internal
+
+# Forward a web server
+tunnel add --name web --local 8080 --remote 80
+```
+
+> [!NOTE]
+> `tunnel add` requires an active profile. The name (`--name`) is used to identify the rule for `tunnel remove` and `tunnel reconnect`.
+
+---
+
+### 4. View profiles and status
+
+```bash
+# List all profiles and their connection status
+tunnel list
+```
+
+Output:
+```
+╭──────────┬──────────────────────┬───────┬───────┬──────────╮
+│ Profile  │ Host                 │ User  │ Ports │ Status   │
+├──────────┼──────────────────────┼───────┼───────┼──────────┤
+│ prod-db  │ jump.example.com     │ admin │ 3     │ ● ACTIVE │
+│ staging  │ jump-stg.example.com │ admin │ 1     │ ○ idle   │
+╰──────────┴──────────────────────┴───────┴───────┴──────────╯
+```
+
+```bash
+# Show per-port forwarding status of the active profile
 tunnel status
 ```
 
 Output:
-
 ```
-─────────────── ● CONNECTED — prod-db ───────────────
-Jump Host: admin@jump.example.com:22
+─────── ● CONNECTED — prod-db ───────
 
-╭───┬────────────┬───────────┬────────────────────┬────────╮
-│ # │ Local Port │ Direction │ Remote             │ Status │
-├───┼────────────┼───────────┼────────────────────┼────────┤
-│ 1 │ :5432      │     →     │ 127.0.0.1:5432     │ ● OPEN │
-│ 2 │ :6379      │     →     │ redis.internal:6379│ ● OPEN │
-╰───┴────────────┴───────────┴────────────────────┴────────╯
-2 port(s) forwarded.
+╭──────────┬─────────┬────────────┬─────────────────┬─────────────┬────────╮
+│ Name     │ Profile │ Local Port │ Remote Host      │ Remote Port │ Status │
+├──────────┼─────────┼────────────┼─────────────────┼─────────────┼────────┤
+│ postgres │ prod-db │ :5432      │ 127.0.0.1       │ :5432       │ ● OPEN │
+│ redis    │ prod-db │ :6379      │ redis.internal  │ :6379       │ ● OPEN │
+│ web      │ prod-db │ :8080      │ 127.0.0.1       │ :80         │ ● OPEN │
+╰──────────┴─────────┴────────────┴─────────────────┴─────────────┴────────╯
 ```
 
 ---
 
-### 5. Stop tunnel
+### 5. Remove port rules or profiles
+
+```bash
+# Remove a port forwarding rule by name (from active profile)
+tunnel remove --name redis
+
+# Remove an entire profile (stops tunnel if active)
+tunnel remove --profile-name staging
+```
+
+---
+
+### 6. Reconnect
+
+```bash
+# Reconnect entire profile (close + reopen SSH + all ports)
+tunnel reconnect --profile-name prod-db
+
+# Reconnect only one port forwarding (within active profile)
+tunnel reconnect --name postgres
+```
+
+---
+
+### 7. Stop tunnel
 
 ```bash
 tunnel stop
@@ -119,7 +160,7 @@ tunnel stop
 
 ---
 
-### 6. Self-update
+### 8. Self-update
 
 ```bash
 tunnel update             # Update both CLI and daemon
@@ -133,11 +174,16 @@ tunnel update --daemon-only
 | Command | Description |
 |---------|-------------|
 | `tunnel new <name>` | Create a new SSH profile (interactive) |
-| `tunnel add <profile> --local N --remote N [--remote-host H]` | Add port mapping |
-| `tunnel list` | List all profiles |
+| `tunnel list` | List all profiles with connection status |
 | `tunnel use <name>` | Connect using a profile |
+| `tunnel add --name <n> --local <p> --remote <p> [--remote-host <h>]` | Add port rule to active profile |
 | `tunnel stop` | Stop the active tunnel |
-| `tunnel status` | Show per-port connection status |
+| `tunnel status` | Show per-port status of the active profile |
+| `tunnel remove --name <n>` | Remove a port rule from active profile |
+| `tunnel remove --profile-name <n>` | Remove an entire profile |
+| `tunnel reconnect --profile-name <n>` | Reconnect entire profile |
+| `tunnel reconnect --name <n>` | Reconnect a single port rule |
+| `tunnel clean` | Delete all profiles and reset config (with confirmation) |
 | `tunnel update [--daemon-only]` | Self-update from GitHub Releases |
 
 ---
@@ -158,8 +204,8 @@ Managed automatically by the daemon. Manual edit example:
         "keyPath": "~/.ssh/id_rsa"
       },
       "ports": [
-        { "local": 5432, "remote": 5432, "remoteHost": "127.0.0.1" },
-        { "local": 6379, "remote": 6379, "remoteHost": "redis.internal" }
+        { "name": "postgres", "local": 5432, "remote": 5432, "remoteHost": "127.0.0.1" },
+        { "name": "redis",    "local": 6379, "remote": 6379, "remoteHost": "redis.internal" }
       ]
     }
   ]
@@ -201,9 +247,6 @@ dotnet publish -r linux-x64 -c Release -o ./bin/linux-x64
 # Build Daemon
 cd ../Tunnel.Daemon
 dotnet publish -r linux-x64 -c Release -o ./bin/linux-x64
-
-# Build for ARM64
-dotnet publish -r linux-arm64 -c Release -o ./bin/linux-arm64
 ```
 
 ---

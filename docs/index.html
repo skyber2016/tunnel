@@ -369,7 +369,7 @@
 
     <h1>
       Manage SSH Tunnels<br />
-      <span class="accent">Like a Pro</span>
+      <span class="accent">Powered by Claude Sonnet 4.6</span>
     </h1>
 
     <p class="hero-sub">
@@ -497,18 +497,16 @@
         </div>
         <div class="terminal-body">
           <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel new prod-db</span></div>
-          <div class="term-line"><span class="term-grey">Creating profile: </span><span class="term-yellow">prod-db</span></div>
-          <div class="term-line"><span class="term-cyan">Jump Host:</span><span class="term-cmd"> jump.example.com</span></div>
-          <div class="term-line"><span class="term-cyan">SSH User:</span><span class="term-cmd"> admin</span></div>
           <div class="term-line"><span class="term-green">✔ Profile 'prod-db' created.</span></div>
-          <div class="term-blank"></div>
-          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel add prod-db --local 5432 --remote 5432</span></div>
-          <div class="term-line"><span class="term-green">✔ Added: </span><span class="term-cyan">localhost:5432</span><span class="term-grey"> → 127.0.0.1:5432</span></div>
           <div class="term-blank"></div>
           <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel use prod-db</span></div>
           <div class="term-line"><span class="term-grey">Connecting to admin@jump.example.com...</span></div>
           <div class="term-line"><span class="term-green">✔ Tunnel 'prod-db' is active.</span></div>
-          <div class="term-line"><span class="term-grey">  localhost:</span><span class="term-cyan">5432</span><span class="term-grey"> → 127.0.0.1:5432</span></div>
+          <div class="term-blank"></div>
+          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel add --name postgres --local 5432 --remote 5432</span></div>
+          <div class="term-line"><span class="term-green">✔ Added 'postgres':</span><span class="term-grey"> localhost:5432 → 127.0.0.1:5432</span></div>
+          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel add --name redis --local 6379 --remote 6379</span></div>
+          <div class="term-line"><span class="term-green">✔ Added 'redis':</span><span class="term-grey"> localhost:6379 → 127.0.0.1:6379</span></div>
         </div>
       </div>
 
@@ -522,18 +520,17 @@
           <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel status</span></div>
           <div class="term-blank"></div>
           <div class="term-line" style="color: var(--green)">─── ● CONNECTED — prod-db ───</div>
-          <div class="term-line"><span class="term-grey">Jump Host: </span><span class="term-cmd">admin@jump.example.com:22</span></div>
-          <div class="term-blank"></div>
-          <div class="term-line" style="display:block; font-size:0.8rem; color: var(--muted); font-family:'JetBrains Mono',monospace">
-            ╭───┬────────────┬───┬──────────────────┬────────╮<br/>
-            │ # │ Local Port │ → │ Remote           │ Status │<br/>
-            ├───┼────────────┼───┼──────────────────┼────────┤<br/>
-            │ 1 │<span class="term-cmd"> :5432      </span>│ → │ 127.0.0.1:5432   │<span class="term-green"> ● OPEN </span>│<br/>
-            │ 2 │<span class="term-cmd"> :6379      </span>│ → │ redis.int:6379   │<span class="term-green"> ● OPEN </span>│<br/>
-            ╰───┴────────────┴───┴──────────────────┴────────╯
+          <div class="term-line" style="display:block; font-size:0.72rem; color: var(--muted); font-family:'JetBrains Mono',monospace; line-height:1.7">
+            ╭──────────┬─────────┬───────────┬──────────────┬────────╮<br/>
+            │ Name     │ Profile │ Local Port│ Remote       │ Status │<br/>
+            ├──────────┼─────────┼───────────┼──────────────┼────────┤<br/>
+            │<span class="term-cmd"> postgres </span>│ prod-db │<span class="term-cyan"> :5432     </span>│ 127.0.0.1:5432│<span class="term-green"> ● OPEN </span>│<br/>
+            │<span class="term-cmd"> redis    </span>│ prod-db │<span class="term-cyan"> :6379     </span>│ 127.0.0.1:6379│<span class="term-green"> ● OPEN </span>│<br/>
+            ╰──────────┴─────────┴───────────┴──────────────┴────────╯
           </div>
           <div class="term-blank"></div>
-          <div class="term-line"><span class="term-grey">2 port(s) forwarded.</span></div>
+          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel remove --name redis</span></div>
+          <div class="term-line"><span class="term-green">✔ Port forwarding 'redis' removed.</span></div>
           <div class="term-blank"></div>
           <div class="term-line"><span class="term-prompt">$ </span><span class="cursor"></span></div>
         </div>
@@ -555,16 +552,16 @@
         <div class="cmd-desc">Create a new SSH profile interactively</div>
       </div>
       <div class="cmd-row">
-        <div class="cmd-key">tunnel add &lt;profile&gt; --local N --remote N</div>
-        <div class="cmd-desc">Add a port forwarding mapping to a profile</div>
-      </div>
-      <div class="cmd-row">
         <div class="cmd-key">tunnel list</div>
-        <div class="cmd-desc">List all saved profiles in a table view</div>
+        <div class="cmd-desc">List all profiles — shows Profile, Host, User, Ports, Status</div>
       </div>
       <div class="cmd-row">
         <div class="cmd-key">tunnel use &lt;name&gt;</div>
-        <div class="cmd-desc">Activate a profile and start the SSH tunnel</div>
+        <div class="cmd-desc">Activate a profile and establish the SSH tunnel</div>
+      </div>
+      <div class="cmd-row">
+        <div class="cmd-key">tunnel add --name &lt;n&gt; --local &lt;p&gt; --remote &lt;p&gt; [--remote-host &lt;h&gt;]</div>
+        <div class="cmd-desc">Add a named port rule to the active profile</div>
       </div>
       <div class="cmd-row">
         <div class="cmd-key">tunnel stop</div>
@@ -572,7 +569,27 @@
       </div>
       <div class="cmd-row">
         <div class="cmd-key">tunnel status</div>
-        <div class="cmd-desc">Show live status of each port forwarding connection</div>
+        <div class="cmd-desc">Show per-port status of the active profile (Name, Profile, Ports)</div>
+      </div>
+      <div class="cmd-row">
+        <div class="cmd-key">tunnel remove --name &lt;n&gt;</div>
+        <div class="cmd-desc">Remove a named port rule from the active profile</div>
+      </div>
+      <div class="cmd-row">
+        <div class="cmd-key">tunnel remove --profile-name &lt;n&gt;</div>
+        <div class="cmd-desc">Delete an entire profile (stops tunnel if active)</div>
+      </div>
+      <div class="cmd-row">
+        <div class="cmd-key">tunnel reconnect --profile-name &lt;n&gt;</div>
+        <div class="cmd-desc">Close and reopen full SSH connection for a profile</div>
+      </div>
+      <div class="cmd-row">
+        <div class="cmd-key">tunnel reconnect --name &lt;n&gt;</div>
+        <div class="cmd-desc">Reconnect a single named port rule in the active profile</div>
+      </div>
+      <div class="cmd-row">
+        <div class="cmd-key">tunnel clean</div>
+        <div class="cmd-desc">Delete all profiles and reset config (confirmation required)</div>
       </div>
       <div class="cmd-row">
         <div class="cmd-key">tunnel update [--daemon-only]</div>
