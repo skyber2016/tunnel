@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # ============================================================
 # uninstall.sh — SSH Tunnel Manager Uninstaller
-# Removes tunnel CLI, daemon binary, and systemd service.
 #
 # Usage:
-#   bash uninstall.sh           Remove binaries and service (keeps ~/.tunnel/)
-#   bash uninstall.sh --purge   Also remove all profile data (~/.tunnel/)
+#   curl -sSL https://raw.githubusercontent.com/skyber2016/tunnel/main/uninstall.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/skyber2016/tunnel/main/uninstall.sh | bash -s -- --purge
+#
+# Options:
+#   --purge   Also remove all profile data (~/.tunnel/)
 # ============================================================
 
 set -euo pipefail
@@ -15,6 +17,7 @@ INSTALL_DAEMON="/usr/local/bin/tunnel-daemon"
 SERVICE_DIR="${HOME}/.config/systemd/user"
 SERVICE_NAME="tunnel.service"
 CONFIG_DIR="${HOME}/.tunnel"
+GITHUB_RAW="https://raw.githubusercontent.com/skyber2016/tunnel/main"
 
 # ── Colors ────────────────────────────────────────────────────
 RED='\033[0;31m'
@@ -29,6 +32,7 @@ warn()    { echo -e "${YELLOW}[warn]${RESET}  $*"; }
 error()   { echo -e "${RED}[fail]${RESET}  $*" >&2; exit 1; }
 step()    { echo -e "\n${CYAN}▸${RESET} $*"; }
 
+# ── Parse arguments ───────────────────────────────────────────
 PURGE=false
 for arg in "$@"; do
   [[ "$arg" == "--purge" ]] && PURGE=true
@@ -42,9 +46,9 @@ echo ""
 
 # ── Check if anything is installed ───────────────────────────
 FOUND=false
-[[ -f "$INSTALL_CLI" ]]    && FOUND=true
-[[ -f "$INSTALL_DAEMON" ]] && FOUND=true
-[[ -f "${SERVICE_DIR}/${SERVICE_NAME}" ]] && FOUND=true
+[[ -f "$INSTALL_CLI" ]]    && FOUND=true || true
+[[ -f "$INSTALL_DAEMON" ]] && FOUND=true || true
+[[ -f "${SERVICE_DIR}/${SERVICE_NAME}" ]] && FOUND=true || true
 
 if [[ "$FOUND" == "false" ]]; then
   warn "No SSH Tunnel Manager installation found on this system."
@@ -52,11 +56,11 @@ if [[ "$FOUND" == "false" ]]; then
   exit 0
 fi
 
-# ── Confirmation prompt ───────────────────────────────────────
+# ── Show what will be removed ─────────────────────────────────
 echo -e "The following will be removed:"
-[[ -f "$INSTALL_CLI" ]]    && echo -e "  ${RED}✗${RESET} $INSTALL_CLI"
-[[ -f "$INSTALL_DAEMON" ]] && echo -e "  ${RED}✗${RESET} $INSTALL_DAEMON"
-[[ -f "${SERVICE_DIR}/${SERVICE_NAME}" ]] && echo -e "  ${RED}✗${RESET} ${SERVICE_DIR}/${SERVICE_NAME}"
+[[ -f "$INSTALL_CLI" ]]    && echo -e "  ${RED}✗${RESET} $INSTALL_CLI"    || true
+[[ -f "$INSTALL_DAEMON" ]] && echo -e "  ${RED}✗${RESET} $INSTALL_DAEMON" || true
+[[ -f "${SERVICE_DIR}/${SERVICE_NAME}" ]] && echo -e "  ${RED}✗${RESET} ${SERVICE_DIR}/${SERVICE_NAME}" || true
 
 if [[ "$PURGE" == "true" ]]; then
   echo ""
@@ -64,7 +68,15 @@ if [[ "$PURGE" == "true" ]]; then
 fi
 
 echo ""
-read -r -p "Proceed with uninstall? [y/N] " confirm
+
+# ── Confirm prompt — works both interactively and via curl | bash ──
+# When stdin is a pipe (curl), read from /dev/tty directly.
+if [ -t 0 ]; then
+  read -r -p "Proceed with uninstall? [y/N] " confirm
+else
+  read -r -p "Proceed with uninstall? [y/N] " confirm < /dev/tty
+fi
+
 if [[ ! "$confirm" =~ ^[yY]([eE][sS])?$ ]]; then
   echo "Aborted."
   exit 0
@@ -114,7 +126,7 @@ else
   echo ""
   warn "Profile data has NOT been removed: ${CONFIG_DIR}"
   warn "Your SSH profiles are preserved. To remove them:"
-  echo -e "  ${CYAN}bash uninstall.sh --purge${RESET}"
+  echo -e "  ${CYAN}curl -sSL ${GITHUB_RAW}/uninstall.sh | bash -s -- --purge${RESET}"
   echo -e "  — or manually: ${CYAN}rm -rf ${CONFIG_DIR}${RESET}"
 fi
 
@@ -125,5 +137,5 @@ echo -e "${GREEN}  ✔ SSH Tunnel Manager uninstalled.     ${RESET}"
 echo -e "${GREEN}════════════════════════════════════════${RESET}"
 echo ""
 echo "  To reinstall:"
-echo -e "  ${CYAN}curl -sSL https://raw.githubusercontent.com/skyber2016/tunnel/main/install.sh | bash${RESET}"
+echo -e "  ${CYAN}curl -sSL ${GITHUB_RAW}/install.sh | bash${RESET}"
 echo ""
