@@ -137,12 +137,12 @@ public sealed class UpdateCommand
 
         task.Value = 96;
 
-        // ── Atomic swap ─────────────────────────────────────────────
+        // ── Atomic swap (requires sudo for /usr/local/bin/) ──────────
         task.Description = $"[grey]Installing {binaryName}...[/]";
 
-        if (File.Exists(installPath)) RunShell($"mv {installPath} {backupPath}");
-        RunShell($"mv {tmpPath} {installPath}");
-        RunShell($"chmod +x {installPath}");
+        if (File.Exists(installPath)) RunShell($"sudo mv \"{installPath}\" \"{backupPath}\"");
+        RunShell($"sudo mv \"{tmpPath}\" \"{installPath}\"");
+        RunShell($"sudo chmod +x \"{installPath}\"");
 
         task.Value = 100;
         task.Description = $"[green]✔ {binaryName} updated[/]";
@@ -154,6 +154,10 @@ public sealed class UpdateCommand
         return version.StartsWith('v') ? version : $"v{version}";
     }
 
+    /// <summary>
+    /// Run a bash command. Throws if the process exits with non-zero so
+    /// failures (e.g. sudo permission denied) are surfaced immediately.
+    /// </summary>
     private static void RunShell(string command)
     {
         var psi = new ProcessStartInfo("bash", $"-c \"{command}\"")
@@ -163,6 +167,11 @@ public sealed class UpdateCommand
             UseShellExecute        = false
         };
         using var p = Process.Start(psi)!;
+        var stderr = p.StandardError.ReadToEnd();
         p.WaitForExit();
+
+        if (p.ExitCode != 0)
+            throw new Exception(
+                $"Command failed (exit {p.ExitCode}): {command}\n{stderr.Trim()}");
     }
 }
