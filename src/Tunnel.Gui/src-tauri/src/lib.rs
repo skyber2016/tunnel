@@ -16,6 +16,36 @@ fn get_auth_token() -> Result<String, String> {
         .map_err(|e| format!("Lỗi khi đọc file .auth: {}", e))
 }
 
+#[tauri::command]
+fn start_daemon() -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        // On Windows, use Command to start tunnel-daemon.exe
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        
+        let mut cmd = std::process::Command::new("tunnel-daemon.exe");
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        
+        match cmd.spawn() {
+            Ok(_) => Ok("Started tunnel-daemon.exe on Windows".to_string()),
+            Err(e) => Err(format!("Lỗi khi khởi chạy tunnel-daemon.exe: {}", e)),
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        // On Linux, use systemctl
+        match std::process::Command::new("systemctl")
+            .args(["--user", "start", "tunnel"])
+            .spawn() 
+        {
+            Ok(_) => Ok("Started tunnel daemon via systemctl".to_string()),
+            Err(e) => Err(format!("Lỗi khi chạy systemctl: {}", e)),
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -73,7 +103,7 @@ pub fn run() {
             }
             _ => {}
         })
-        .invoke_handler(tauri::generate_handler![get_auth_token])
+        .invoke_handler(tauri::generate_handler![get_auth_token, start_daemon])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

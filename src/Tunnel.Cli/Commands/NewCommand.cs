@@ -32,7 +32,7 @@ public sealed class NewCommand
 
         if (!api.IsDaemonRunning())
         {
-            AnsiConsole.MarkupLine("[red]✗ Daemon is not running.[/] Start it with: [grey]systemctl --user start tunnel[/]");
+            AnsiConsole.MarkupLine($"[red]✗ Daemon is not running.[/] Start it with: [grey]{DaemonManager.GetStartCommandHelp()}[/]");
             return;
         }
 

@@ -23,7 +23,7 @@ public sealed class UseCommand
 
         if (!api.IsDaemonRunning())
         {
-            AnsiConsole.MarkupLine("[red]✗ Daemon is not running.[/] Start it: [grey]systemctl --user start tunnel[/]");
+            AnsiConsole.MarkupLine($"[red]✗ Daemon is not running.[/] Start it: [grey]{DaemonManager.GetStartCommandHelp()}[/]");
             return;
         }
 

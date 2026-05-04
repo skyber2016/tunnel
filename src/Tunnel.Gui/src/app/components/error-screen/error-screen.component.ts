@@ -18,7 +18,10 @@ import { AuthService } from '../../services/auth.service';
           <span class="spinner"></span>
           Retrying automatically every 5 seconds...
         </div>
-        <button class="btn-retry" (click)="auth.loadToken()">Retry Now</button>
+        <div class="actions">
+          <button class="btn-primary" (click)="auth.startDaemon()">Start Daemon</button>
+          <button class="btn-outline" (click)="auth.loadToken()">Retry Now</button>
+        </div>
       </div>
     </div>
   `,
@@ -47,12 +50,19 @@ import { AuthService } from '../../services/auth.service';
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .btn-retry {
+    .actions { display: flex; gap: 10px; justify-content: center; }
+    .btn-primary {
       background: #2563eb; color: #fff; border: none; border-radius: 8px;
-      padding: 10px 28px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      padding: 10px 24px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
       transition: background 0.15s;
     }
-    .btn-retry:hover { background: #1d4ed8; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-outline {
+      background: transparent; color: #cbd5e1; border: 1px solid #475569; border-radius: 8px;
+      padding: 10px 24px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-outline:hover { border-color: #94a3b8; color: #fff; }
   `]
 })
 export class ErrorScreenComponent {

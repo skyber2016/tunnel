@@ -98,26 +98,23 @@ public sealed class UpdateCommand
                 if (!daemonOnly)
                 {
                     var cliTask = ctx.AddTask("[yellow]CLI binary[/]");
+                    var cliInstallPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+                        ? Environment.ProcessPath! 
+                        : "/usr/local/bin/tunnel";
                     await DownloadAndSwapAsync(http, "tunnel", baseUrl,
-                        "/usr/local/bin/tunnel", cliTask);
+                        cliInstallPath, cliTask);
                 }
 
                 var daemonTask = ctx.AddTask("[cyan]Daemon binary[/]");
+                var daemonInstallPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                    ? Path.Combine(AppContext.BaseDirectory, "tunnel-daemon.exe")
+                    : "/usr/local/bin/tunnel-daemon";
                 await DownloadAndSwapAsync(http, "tunnel-daemon", baseUrl,
-                    "/usr/local/bin/tunnel-daemon", daemonTask);
+                    daemonInstallPath, daemonTask);
             });
 
-        // Restart daemon as the original user (not root)
-        AnsiConsole.MarkupLine("[grey]Restarting daemon...[/]");
-        var sudoUser = Environment.GetEnvironmentVariable("SUDO_USER");
-        if (!string.IsNullOrEmpty(sudoUser))
-        {
-            Exec("runuser", $"-l {sudoUser} -c \"systemctl --user restart tunnel\"");
-        }
-        else
-        {
-            Exec("systemctl", "--user restart tunnel");
-        }
+        // Restart daemon gracefully
+        DaemonManager.RestartDaemon();
         AnsiConsole.MarkupLine($"[green]✔ Updated to v{targetVersion}. Daemon restarted.[/]");
     }
 
@@ -126,9 +123,12 @@ public sealed class UpdateCommand
     private static async Task DownloadAndSwapAsync(
         HttpClient http, string binaryName, string baseUrl, string installPath, ProgressTask task)
     {
-        var fileName   = $"{binaryName}-linux-x64";
+        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        var fileName   = isWindows ? $"{binaryName}-win-x64.exe" : $"{binaryName}-linux-x64";
         var binaryUrl  = $"{baseUrl}/{fileName}";
-        var tmpPath    = $"/tmp/{binaryName}_new";
+        var tmpPath    = isWindows 
+            ? Path.Combine(Path.GetTempPath(), $"{binaryName}_new.exe")
+            : $"/tmp/{binaryName}_new";
         var backupPath = $"{installPath}.old";
 
         // ── Download binary ─────────────────────────────────────────
@@ -185,17 +185,5 @@ public sealed class UpdateCommand
 
         task.Value = 100;
         task.Description = $"[green]✔ {binaryName} updated[/]";
-    }
-
-    private static void Exec(string fileName, string arguments)
-    {
-        var psi = new ProcessStartInfo(fileName, arguments)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError  = true,
-            UseShellExecute        = false
-        };
-        using var p = Process.Start(psi)!;
-        p.WaitForExit();
     }
 }

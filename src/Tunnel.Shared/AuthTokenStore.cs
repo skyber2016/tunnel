@@ -9,7 +9,7 @@ namespace Tunnel.Shared;
 public static class AuthTokenStore
 {
     private static readonly string TokenPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        AppDomain.CurrentDomain.BaseDirectory,
         ".tunnel", ".auth");
 
     /// <summary>
@@ -57,6 +57,8 @@ public static class AuthTokenStore
     // Only meaningful on Linux/macOS — no-op on Windows dev machines
     private static void SetPosixPermissions600(string path)
     {
+        if (OperatingSystem.IsWindows()) return;
+
         try
         {
             File.SetUnixFileMode(path,

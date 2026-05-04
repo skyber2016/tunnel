@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TunnelService } from '../../services/tunnel.service';
-import { TunnelStatus, Profile, ProfilesConfig, PortStatus } from '../../models/tunnel.model';
+import { TunnelStatus, Profile, ProfilesConfig, PortStatus, PortMapping } from '../../models/tunnel.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -97,7 +97,57 @@ import { TunnelStatus, Profile, ProfilesConfig, PortStatus } from '../../models/
       <section class="profiles card">
         <div class="card-header">
           <h2>Profiles</h2>
+          <button class="btn btn-outline btn-sm-text" (click)="showCreateProfile.set(!showCreateProfile())">
+            {{ showCreateProfile() ? 'Cancel' : '+ New Profile' }}
+          </button>
         </div>
+        
+        @if (showCreateProfile()) {
+          <div class="create-profile-form">
+            <h3>Create New Profile</h3>
+            <div class="form-grid">
+              <div class="form-group" style="grid-column: 1 / -1; margin-bottom: 8px;">
+                <label>Import Rules (Optional)</label>
+                <input type="file" accept=".fwr" (change)="onImportFwr($event)" class="input" style="padding: 4px;">
+              </div>
+              <div class="form-group">
+                <label>Profile Name</label>
+                <input class="input" [(ngModel)]="newProfile.name" placeholder="e.g. Production">
+              </div>
+              <div class="form-group">
+                <label>SSH Host</label>
+                <input class="input" [(ngModel)]="newProfile.jumpHost.host" placeholder="example.com">
+              </div>
+              <div class="form-group">
+                <label>SSH Port</label>
+                <input class="input" type="number" [(ngModel)]="newProfile.jumpHost.port" placeholder="22">
+              </div>
+              <div class="form-group">
+                <label>SSH User</label>
+                <input class="input" [(ngModel)]="newProfile.jumpHost.user" placeholder="root">
+              </div>
+              <div class="form-group">
+                <label>Private Key Path</label>
+                <input class="input" [(ngModel)]="newProfile.jumpHost.keyPath" placeholder="~/.ssh/id_rsa">
+              </div>
+            </div>
+            
+            @if (newProfile.ports.length > 0) {
+              <div class="imported-ports">
+                <h4>Imported Ports ({{newProfile.ports.length}})</h4>
+                <ul class="imported-list">
+                  @for (p of newProfile.ports; track p.name) {
+                    <li><strong>{{p.name}}</strong>: {{p.local}} &rarr; {{p.remoteHost}}:{{p.remote}}</li>
+                  }
+                </ul>
+              </div>
+            }
+
+            <button class="btn btn-primary" style="margin-top: 10px;" (click)="onCreateProfile()" [disabled]="actionLoading()">Save Profile</button>
+          </div>
+        }
+
+
         @if (profilesLoading()) {
           <div class="loading-row">Loading profiles...</div>
         } @else if (!profiles()?.length) {
@@ -211,6 +261,20 @@ import { TunnelStatus, Profile, ProfilesConfig, PortStatus } from '../../models/
     .loading-row, .empty-state { padding: 20px; text-align: center; color: #64748b; font-size: 0.85rem; }
     .empty-state code { background: #0f172a; padding: 2px 6px; border-radius: 4px; color: #38bdf8; }
 
+    /* Create Profile */
+    .create-profile-form { background: #0f172a; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px dashed #334155; }
+    .create-profile-form h3 { margin: 0 0 12px; font-size: 0.95rem; color: #cbd5e1; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
+    .form-group .input { width: 100%; }
+    
+    .imported-ports { margin-top: 16px; background: #1e293b; padding: 12px; border-radius: 6px; }
+    .imported-ports h4 { margin: 0 0 8px; font-size: 0.85rem; color: #cbd5e1; }
+    .imported-list { margin: 0; padding-left: 20px; font-size: 0.78rem; color: #94a3b8; }
+    .imported-list li { margin-bottom: 4px; }
+    .imported-list strong { color: #38bdf8; }
+
     /* Toast */
     .toast {
       padding: 10px 16px; border-radius: 8px; margin-bottom: 14px; font-size: 0.82rem; font-weight: 500; animation: fadeIn 0.2s;
@@ -230,8 +294,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   actionLoading = signal(false);
   toast = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
+  showCreateProfile = signal(false);
 
   newPort = { name: '', local: 0, remote: 0, remoteHost: '127.0.0.1' };
+  newProfile: Profile = {
+    name: '',
+    jumpHost: { host: '', port: 22, user: 'root', keyPath: '~/.ssh/id_rsa' },
+    ports: []
+  };
 
   ngOnInit(): void {
     this.refresh();
@@ -310,5 +380,95 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.newPort.name || !this.newPort.local || !this.newPort.remote) return;
     this.doAction(this.tunnelService.addPort(this.newPort));
     this.newPort = { name: '', local: 0, remote: 0, remoteHost: '127.0.0.1' };
+  }
+
+  onCreateProfile(): void {
+    if (!this.newProfile.name || !this.newProfile.jumpHost.host) {
+      this.showToast('Name and Host are required.', 'error');
+      return;
+    }
+    const currentConfig: ProfilesConfig = { profiles: this.profiles() || [] };
+    if (currentConfig.profiles.some(p => p.name === this.newProfile.name)) {
+      this.showToast('Profile name already exists.', 'error');
+      return;
+    }
+
+    currentConfig.profiles.push({ ...this.newProfile });
+    this.actionLoading.set(true);
+
+    this.tunnelService.saveProfiles(currentConfig).subscribe({
+      next: res => {
+        this.showToast(res.message, res.success ? 'success' : 'error');
+        this.actionLoading.set(false);
+        if (res.success) {
+          this.showCreateProfile.set(false);
+          this.newProfile = {
+            name: '',
+            jumpHost: { host: '', port: 22, user: 'root', keyPath: '~/.ssh/id_rsa' },
+            ports: []
+          };
+          this.refreshProfiles();
+        }
+      },
+      error: err => {
+        this.showToast(String(err.message || err), 'error');
+        this.actionLoading.set(false);
+      }
+    });
+  }
+
+  onImportFwr(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (!content) return;
+
+      const lines = content.split(/\r?\n/);
+      const rules = new Map<number, any>();
+
+      const regex = /^FwdReq_(\d+)_(.+?)=(.*)$/;
+      for (const line of lines) {
+        const match = line.match(regex);
+        if (match) {
+          const idx = parseInt(match[1], 10);
+          const prop = match[2];
+          const val = match[3];
+
+          if (!rules.has(idx)) rules.set(idx, {});
+          rules.get(idx)![prop] = val;
+        }
+      }
+
+      const ports: PortMapping[] = [];
+      rules.forEach((rule, idx) => {
+        if (rule['Incoming'] === '0' && rule['Port'] && rule['HostPort']) {
+          ports.push({
+            name: rule['Description'] || `Forward_${idx}`,
+            local: parseInt(rule['Port'], 10),
+            remoteHost: rule['Host'] || '127.0.0.1',
+            remote: parseInt(rule['HostPort'], 10)
+          });
+        }
+      });
+
+      if (ports.length > 0) {
+        this.newProfile.ports = [...this.newProfile.ports, ...ports];
+        this.showToast(`Imported ${ports.length} ports from .fwr file!`, 'success');
+
+        // Auto-fill profile name if it's currently empty
+        if (!this.newProfile.name) {
+          this.newProfile.name = file.name.replace('.fwr', '');
+        }
+      } else {
+        this.showToast('No valid Client-to-Server ports found in the file.', 'error');
+      }
+
+      // Reset input
+      (event.target as HTMLInputElement).value = '';
+    };
+    reader.readAsText(file, 'UTF-16LE');
   }
 }

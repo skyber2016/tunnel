@@ -9,9 +9,7 @@ namespace Tunnel.Daemon.Services;
 /// </summary>
 public sealed class ProfileService
 {
-    private static readonly string ConfigPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".tunnel", "profiles.json");
+    private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,".tunnel", "profiles.json");
 
     private readonly ILogger<ProfileService> _logger;
 

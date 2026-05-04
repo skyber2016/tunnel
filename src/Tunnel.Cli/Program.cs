@@ -29,5 +29,6 @@ rootCommand.AddCommand(new CleanCommand().Build());
 rootCommand.AddCommand(new ReloadCommand().Build());
 rootCommand.AddCommand(new UpdateCommand().Build());
 rootCommand.AddCommand(new VersionCommand().Build());
+rootCommand.AddCommand(new ImportCommand().Build());
 
 return await rootCommand.InvokeAsync(args);

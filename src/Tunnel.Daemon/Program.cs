@@ -10,12 +10,26 @@ using Tunnel.Shared;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
+// Add support for running as a background service (Systemd on Linux, Windows Service on Windows)
+builder.Host.UseSystemd();
+builder.Host.UseWindowsService();
+
 // AOT-safe JSON serialization via Source Generators
 builder.Services.ConfigureHttpJsonOptions(opts =>
     opts.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonContext.Default));
 
 builder.Services.AddSingleton<ProfileService>();
 builder.Services.AddSingleton<TunnelService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 // Kestrel: listen only on localhost (not externally accessible)
 builder.WebHost.UseKestrel(kestrel =>
@@ -32,26 +46,9 @@ var app = builder.Build();
 // CLI reads the same file — no secret ever touches source code.
 var validToken = AuthTokenStore.LoadOrGenerate();
 
-app.Use(async (ctx, next) =>
-{
-    // Health + version endpoints skip auth
-    if (ctx.Request.Path == "/health" || ctx.Request.Path == "/api/version")
-    {
-        await next();
-        return;
-    }
 
-    if (!ctx.Request.Headers.TryGetValue("Authorization", out var authVal)
-        || authVal.ToString() != $"Bearer {validToken}")
-    {
-        ctx.Response.StatusCode = 401;
-        await ctx.Response.WriteAsync("Unauthorized");
-        return;
-    }
 
-    await next();
-});
-
+app.UseCors("AllowAll");
 app.MapTunnelEndpoints();
 
 app.Run();

@@ -24,6 +24,10 @@ export class TunnelService {
     return this.http.get<ApiResponse<ProfilesConfig>>(`${BASE}/profiles`);
   }
 
+  saveProfiles(config: ProfilesConfig): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${BASE}/profiles`, config);
+  }
+
   startProfile(profile: Profile): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(`${BASE}/start`, profile);
   }

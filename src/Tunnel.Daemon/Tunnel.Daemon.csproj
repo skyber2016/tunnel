@@ -14,7 +14,7 @@
     <StripSymbols>true</StripSymbols>
 
     <!-- Target platforms -->
-    <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -25,6 +25,8 @@
 
   <ItemGroup>
     <!-- SSH.NET: latest AOT-friendly version -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.7" />
     <PackageReference Include="SSH.NET" Version="2024.2.0" />
   </ItemGroup>
 
@@ -35,15 +37,19 @@
   <Target Name="CreateReleaseBundleAfterPublish" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">
     <PropertyGroup>
       <BundleName>$(AssemblyName)-$(RuntimeIdentifier)</BundleName>
+      <BundleName Condition="'$(RuntimeIdentifier)' == 'win-x64'">$(BundleName).exe</BundleName>
       <BundleSrc>$(PublishDir)$(AssemblyName)</BundleSrc>
+      <BundleSrc Condition="'$(RuntimeIdentifier)' == 'win-x64'">$(PublishDir)$(AssemblyName).exe</BundleSrc>
       <BundleDest>$(PublishDir)$(BundleName)</BundleDest>
     </PropertyGroup>
 
     <Copy SourceFiles="$(BundleSrc)" DestinationFiles="$(BundleDest)" Condition="Exists('$(BundleSrc)')" />
 
-    <Exec Command="md5sum &quot;$(BundleName)&quot; &gt; &quot;$(BundleName).md5&quot;"
-          WorkingDirectory="$(PublishDir)"
-          Condition="Exists('$(BundleDest)')" />
+    <!-- Linux/macOS md5sum -->
+    <Exec Command="md5sum &quot;$(BundleName)&quot; &gt; &quot;$(BundleName).md5&quot;" WorkingDirectory="$(PublishDir)" Condition="Exists('$(BundleDest)') And '$(OS)' != 'Windows_NT'" />
+    
+    <!-- Windows PowerShell MD5 -->
+    <Exec Command="powershell -NoProfile -Command &quot;(Get-FileHash -Algorithm MD5 '$(BundleName)').Hash.ToLower() + '  $(BundleName)' | Out-File -FilePath '$(BundleName).md5' -Encoding ascii&quot;" WorkingDirectory="$(PublishDir)" Condition="Exists('$(BundleDest)') And '$(OS)' == 'Windows_NT'" />
 
     <Message Text="[publish] Created $(BundleDest) + $(BundleDest).md5" Importance="high" />
   </Target>

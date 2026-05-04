@@ -27,7 +27,7 @@ public sealed class StatusCommand
             var rule = new Rule("[red]● Daemon is not running[/]");
             rule.RuleStyle(Style.Parse("red dim"));
             AnsiConsole.Write(rule);
-            AnsiConsole.MarkupLine("[grey]Start it with:[/] [bold]systemctl --user start tunnel[/]");
+            AnsiConsole.MarkupLine($"[grey]Start it with:[/] [bold]{DaemonManager.GetStartCommandHelp()}[/]");
             return;
         }
 

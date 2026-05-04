@@ -51,8 +51,7 @@ public sealed class TunnelService : IDisposable
         var jh = profile.JumpHost;
         _logger.LogInformation("Connecting to {User}@{Host}:{Port}...", jh.User, jh.Host, jh.Port);
 
-        var keyPath = jh.KeyPath.Replace("~",
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        var keyPath = jh.KeyPath.Replace("~", AppDomain.CurrentDomain.BaseDirectory);
 
         var authMethod = new PrivateKeyAuthenticationMethod(jh.User, new PrivateKeyFile(keyPath));
         var connInfo = new SshConnectionInfo(jh.Host, jh.Port, jh.User, authMethod);

@@ -27,6 +27,18 @@ export class AuthService {
     }
   }
 
+  async startDaemon(): Promise<void> {
+    try {
+      this.loading.set(true);
+      await invoke('start_daemon');
+      // Wait a bit for the daemon to start before retrying
+      setTimeout(() => this.loadToken(), 1500);
+    } catch (e) {
+      this.error.set(String(e));
+      this.loading.set(false);
+    }
+  }
+
   private startRetry(): void {
     if (this.retryTimer) return;
     this.retryTimer = setInterval(() => this.loadToken(), 5000);
